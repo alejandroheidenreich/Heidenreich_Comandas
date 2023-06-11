@@ -130,7 +130,7 @@ $app->group('/pedidos', function (RouteCollectorProxy $group) {
 
 
 $app->get('[/]', function (Request $request, Response $response) {
-  $payload = json_encode(array("mensaje" => "trolita"));
+  $payload = json_encode(array("TP" => "Comanda"));
   $response->getBody()->write($payload);
   return $response->withHeader('Content-Type', 'application/json');
 });
