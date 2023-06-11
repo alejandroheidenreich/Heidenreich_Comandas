@@ -130,7 +130,7 @@ $app->group('/pedidos', function (RouteCollectorProxy $group) {
 
 
 $app->get('[/]', function (Request $request, Response $response) {
-  $payload = json_encode(array("mensaje" => "Slim Framework 4 PHP"));
+  $payload = json_encode(array("mensaje" => "trolita"));
   $response->getBody()->write($payload);
   return $response->withHeader('Content-Type', 'application/json');
 });

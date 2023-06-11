@@ -13,8 +13,10 @@ class UsuarioController extends Usuario implements IApiUse
     $rol = $parametros['rol'];
 
     $user = new Usuario( /*$usuario, $clave, $rol*/);
-
-    $user->crearUsuario($usuario, $clave, $rol);
+    $user->usuario = $usuario;
+    $user->clave = $clave;
+    $user->rol = $rol;
+    $user->id = $user->crearUsuario($usuario, $clave, $rol);
 
     $payload = json_encode(array("mensaje" => "Usuario creado con exito"));
 

@@ -10,7 +10,7 @@ class MesaController extends Mesa implements IApiUse
 
     $estado = $parametros['estado'];
 
-    $mesa = new Mesa( /*$usuario, $clave, $rol*/);
+    $mesa = new Mesa();
 
     $mesa->crearMesa($estado);
 
