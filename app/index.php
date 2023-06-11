@@ -25,6 +25,7 @@ $dotenv->safeLoad();
 
 // Instantiate App
 $app = AppFactory::create();
+$app->setBasePath('/app');
 
 // Add error middleware
 $app->addErrorMiddleware(true, true, true);
@@ -36,7 +37,6 @@ $app->group('/usuarios', function (RouteCollectorProxy $group) {
   $group->get('/{propiedad}', \UsuarioController::class . '::TraerPorPropiedad');
   $group->post('[/]', \UsuarioController::class . '::CargarUno');
 });
-
 
 $app->group('/productos', function (RouteCollectorProxy $group) {
   $group->get('[/]', \ProductoController::class . '::TraerTodos');
