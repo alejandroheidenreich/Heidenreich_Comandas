@@ -14,8 +14,11 @@ class ProductoController extends Producto implements IApiUse
     $precio = $parametros['precio'];
 
     $prod = new Producto();
+    $prod->descripcion = $descripcion;
+    $prod->tipo = $tipo;
+    $prod->precio = $precio;
 
-    $prod->crearProducto($descripcion, $tipo, $precio);
+    Producto::crear($prod);
 
     $payload = json_encode(array("mensaje" => "Producto creado con exito"));
 
@@ -24,10 +27,11 @@ class ProductoController extends Producto implements IApiUse
       ->withHeader('Content-Type', 'application/json');
   }
 
-  public static function TraerUnoPorPropiedad($request, $response, $args, $propiedad)
+  public static function TraerUnoPorPropiedad($request, $response, $args)
   {
-    $valor = $args[$propiedad];
-    $product = Producto::obtenerProducto($propiedad, $valor);
+    $propiedad = $args['propiedad'];
+    $valor = $args['valor'];
+    $product = Producto::obtenerUno($propiedad, $valor);
     $payload = json_encode($product);
 
     $response->getBody()->write($payload);
@@ -51,7 +55,7 @@ class ProductoController extends Producto implements IApiUse
     $parametros = $request->getParsedBody();
 
     $nombre = $parametros['nombre'];
-    Producto::modificarProducto($nombre);
+    Producto::modificar($nombre);
 
     $payload = json_encode(array("mensaje" => "Producto modificado con exito"));
 
@@ -65,7 +69,7 @@ class ProductoController extends Producto implements IApiUse
     $parametros = $request->getParsedBody();
 
     $productoId = $parametros['productoId'];
-    Producto::borrarProducto($productoId);
+    Producto::borrar($productoId);
 
     $payload = json_encode(array("mensaje" => "Mesa borrado con exito"));
 

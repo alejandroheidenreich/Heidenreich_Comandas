@@ -12,11 +12,12 @@ class UsuarioController extends Usuario implements IApiUse
     $clave = $parametros['clave'];
     $rol = $parametros['rol'];
 
-    $user = new Usuario( /*$usuario, $clave, $rol*/);
+    $user = new Usuario();
     $user->usuario = $usuario;
     $user->clave = $clave;
     $user->rol = $rol;
-    $user->id = $user->crearUsuario($usuario, $clave, $rol);
+
+    Usuario::crear($user);
 
     $payload = json_encode(array("mensaje" => "Usuario creado con exito"));
 
@@ -25,11 +26,12 @@ class UsuarioController extends Usuario implements IApiUse
       ->withHeader('Content-Type', 'application/json');
   }
 
-  public static function TraerUnoPorPropiedad($request, $response, $args, $propiedad)
+  public static function TraerUnoPorPropiedad($request, $response, $args)
   {
+    $propiedad = $args['propiedad'];
+    $valor = $args['valor'];
 
-    $valor = $args[$propiedad];
-    $usuario = Usuario::obtenerUsuario($propiedad, $valor);
+    $usuario = Usuario::obtenerUno($propiedad, $valor);
     $payload = json_encode($usuario);
 
     $response->getBody()->write($payload);
@@ -53,7 +55,7 @@ class UsuarioController extends Usuario implements IApiUse
     $parametros = $request->getParsedBody();
 
     $nombre = $parametros['nombre'];
-    Usuario::modificarUsuario($nombre);
+    Usuario::modificar($nombre);
 
     $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
 
@@ -67,7 +69,7 @@ class UsuarioController extends Usuario implements IApiUse
     $parametros = $request->getParsedBody();
 
     $usuarioId = $parametros['usuarioId'];
-    Usuario::borrarUsuario($usuarioId);
+    Usuario::borrar($usuarioId);
 
     $payload = json_encode(array("mensaje" => "Usuario borrado con exito"));
 

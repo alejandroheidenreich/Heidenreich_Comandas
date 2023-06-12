@@ -1,6 +1,6 @@
 <?php
 
-class Producto
+class Producto implements IPersistencia
 {
     public $id;
     public $descripcion;
@@ -9,11 +9,11 @@ class Producto
 
     public function __construct( /*$descripcion, $tipo, $precio, $id = false*/)
     { /*
-        $this->descripcion = $descripcion;
-        $this->tipo = $tipo;
-        $this->precio = $precio;
-        if ($id)
-            $this->id = $id;*/
+       $this->descripcion = $descripcion;
+       $this->tipo = $tipo;
+       $this->precio = $precio;
+       if ($id)
+           $this->id = $id;*/
     }
 
     public function __get($propiedad)
@@ -35,13 +35,13 @@ class Producto
     }
 
 
-    public function crearProducto($descripcion, $tipo, $precio)
+    public static function crear($producto)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO productos (descripcion, tipo, precio) VALUES (:descripcion, :tipo, :precio)");
-        $consulta->bindValue(':descripcion', $descripcion, PDO::PARAM_STR);
-        $consulta->bindValue(':tipo', $tipo, PDO::PARAM_STR);
-        $consulta->bindValue(':precio', $precio, PDO::PARAM_STR);
+        $consulta->bindValue(':descripcion', $producto->descripcion, PDO::PARAM_STR);
+        $consulta->bindValue(':tipo', $producto->tipo, PDO::PARAM_STR);
+        $consulta->bindValue(':precio', $producto->precio, PDO::PARAM_STR);
         $consulta->execute();
 
         return $objAccesoDatos->obtenerUltimoId();
@@ -56,7 +56,7 @@ class Producto
         return $consulta->fetchAll(PDO::FETCH_CLASS, 'Producto');
     }
 
-    public static function obtenerProducto($propiedad, $valor)
+    public static function obtenerUno($propiedad, $valor)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDatos->prepararConsulta("SELECT id, descripcion, tipo, precio FROM producto WHERE :propiedad = :valor");
@@ -67,7 +67,7 @@ class Producto
         return $consulta->fetchObject('Producto');
     }
 
-    public static function modificarProducto($producto)
+    public static function modificar($producto)
     {
         $objAccesoDato = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDato->prepararConsulta("UPDATE productos SET descripcion = :descripcion, tipo = :tipo, precio = :precio WHERE id = :id");
@@ -78,7 +78,7 @@ class Producto
         $consulta->execute();
     }
 
-    public static function borrarProducto($producto)
+    public static function borrar($producto)
     {
         $objAccesoDato = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDato->prepararConsulta("UPDATE productos SET fechaBaja = :fechaBaja WHERE id = :id");

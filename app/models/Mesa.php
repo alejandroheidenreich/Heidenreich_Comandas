@@ -1,17 +1,14 @@
 <?php
 
-//require_once './Estado.php';
+//require_once './models/Estado.php';
+require_once './models/GeneradorCodigo.php';
 
-class Mesa
+class Mesa implements IPersistencia
 {
-    public $id; //5 caracteres
+    public $id;
+    public $codigoMesa;
     public $estado;
 
-
-    public function __construct()
-    {
-
-    }
 
     public function __get($propiedad)
     {
@@ -32,11 +29,13 @@ class Mesa
     }
 
 
-    public function crearMesa($estado)
+    public static function crear($mesa)
     {
+        $codigo = GenerarCodigo(5);
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO mesas (estado) VALUES (:estado)");
-        $consulta->bindValue(':estado', $estado, PDO::PARAM_STR);
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO mesas (codigoMesa, estado) VALUES (:codigoMesa, :estado)");
+        $consulta->bindValue(':codigoMesa', $codigo, PDO::PARAM_STR);
+        $consulta->bindValue(':estado', $mesa->estado, PDO::PARAM_STR);
         $consulta->execute();
 
         return $objAccesoDatos->obtenerUltimoId();
@@ -45,16 +44,16 @@ class Mesa
     public static function obtenerTodos()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, estado FROM mesas");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, codigoMesa, estado FROM mesas");
         $consulta->execute();
 
         return $consulta->fetchAll(PDO::FETCH_CLASS, 'Mesa');
     }
 
-    public static function obtenerMesa($propiedad, $valor)
+    public static function obtenerUno($propiedad, $valor)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, estado FROM mesas WHERE :propiedad = :valor");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, codigoMesa, estado FROM mesas WHERE :propiedad = :valor");
         $consulta->bindValue(':propiedad', $propiedad, PDO::PARAM_STR);
         $consulta->bindValue(':valor', $valor, PDO::PARAM_STR);
         $consulta->execute();
@@ -62,7 +61,7 @@ class Mesa
         return $consulta->fetchObject('Mesa');
     }
 
-    public static function modificarMesa($mesa)
+    public static function modificar($mesa)
     {
         $objAccesoDato = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDato->prepararConsulta("UPDATE mesas SET estado = :estado WHERE id = :id");
@@ -71,7 +70,7 @@ class Mesa
         $consulta->execute();
     }
 
-    public static function borrarMesa($mesa)
+    public static function borrar($mesa)
     {
         $objAccesoDato = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDato->prepararConsulta("UPDATE mesas SET fechaBaja = :fechaBaja WHERE id = :id");

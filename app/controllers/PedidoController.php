@@ -8,27 +8,32 @@ class PedidoController extends Pedido implements IApiUse
   {
     $parametros = $request->getParsedBody();
 
+    //$idMesa, $idProducto, $nombreCliente
     $idMesa = $parametros['idMesa'];
-    $puntaje = $parametros['puntaje'];
-    $encuesta = $parametros['encuesta'];
+    $idProducto = $parametros['idProducto'];
+    $nombreCliente = $parametros['nombreCliente'];
 
     $pedido = new Pedido();
+    $pedido->idMesa = $idMesa;
+    $pedido->idProducto = $idProducto;
+    $pedido->nombreCliente = $nombreCliente;
 
-    $pedido->crearPedido($idMesa, $puntaje, $encuesta);
+    Pedido::crear($pedido);
 
-    $payload = json_encode(array("mensaje" => "Pedido creada con exito"));
+    $payload = json_encode(array("mensaje" => "Pedido creado con exito"));
 
     $response->getBody()->write($payload);
     return $response
       ->withHeader('Content-Type', 'application/json');
   }
 
-  public static function TraerUnoPorPropiedad($request, $response, $args, $propiedad)
+  public static function TraerUnoPorPropiedad($request, $response, $args)
   {
 
-    $valor = $args[$propiedad];
-    $Pedido = Pedido::obtenerPedido($propiedad, $valor);
-    $payload = json_encode($Pedido);
+    $propiedad = $args['propiedad'];
+    $valor = $args['valor'];
+    $pedido = Pedido::obtenerUno($propiedad, $valor);
+    $payload = json_encode($pedido);
 
     $response->getBody()->write($payload);
     return $response
@@ -51,7 +56,7 @@ class PedidoController extends Pedido implements IApiUse
     $parametros = $request->getParsedBody();
 
     $nombre = $parametros['nombre'];
-    Usuario::modificarUsuario($nombre);
+    Pedido::modificar($nombre);
 
     $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
 
@@ -64,10 +69,10 @@ class PedidoController extends Pedido implements IApiUse
   {
     $parametros = $request->getParsedBody();
 
-    $usuarioId = $parametros['usuarioId'];
-    Usuario::borrarUsuario($usuarioId);
+    $pedidoId = $parametros['pedidoId'];
+    Pedido::borrar($pedidoId);
 
-    $payload = json_encode(array("mensaje" => "Usuario borrado con exito"));
+    $payload = json_encode(array("mensaje" => "pedido borrado con exito"));
 
     $response->getBody()->write($payload);
     return $response

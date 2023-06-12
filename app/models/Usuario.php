@@ -1,6 +1,8 @@
 <?php
 
-class Usuario
+require_once './interfaces/IPersistencia.php';
+
+class Usuario implements IPersistencia
 {
     public $id;
     public $usuario;
@@ -35,14 +37,14 @@ class Usuario
     }
 
 
-    public static function crearUsuario($usuario, $clave, $rol)
+    public static function crear($user)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO usuarios (usuario, clave, rol) VALUES (:usuario, :clave, :rol)");
-        $claveHash = password_hash($clave, PASSWORD_DEFAULT);
-        $consulta->bindValue(':usuario', $usuario, PDO::PARAM_STR);
+        $claveHash = password_hash($user->clave, PASSWORD_DEFAULT);
+        $consulta->bindValue(':usuario', $user->usuario, PDO::PARAM_STR);
         $consulta->bindValue(':clave', $claveHash);
-        $consulta->bindValue(':rol', $rol, PDO::PARAM_STR);
+        $consulta->bindValue(':rol', $user->rol, PDO::PARAM_STR);
         $consulta->execute();
 
         return $objAccesoDatos->obtenerUltimoId();
@@ -57,18 +59,19 @@ class Usuario
         return $consulta->fetchAll(PDO::FETCH_CLASS, 'Usuario');
     }
 
-    public static function obtenerUsuario($propiedad, $valor)
+    public static function obtenerUno($propiedad, $valor)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, usuario, clave, rol FROM usuarios WHERE :propiedad = :valor");
-        $consulta->bindValue(':propiedad', $propiedad, PDO::PARAM_STR);
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, usuario, clave, rol FROM usuarios WHERE " . $propiedad . " = :valor");
+        //$consulta = $objAccesoDatos->prepararConsulta("SELECT id, usuario, clave, rol FROM usuarios WHERE :propiedad = :valor");
+        //$consulta->bindValue(':propiedad', $propiedad, PDO::PARAM_STR);
         $consulta->bindValue(':valor', $valor, PDO::PARAM_STR);
         $consulta->execute();
 
         return $consulta->fetchObject('Usuario');
     }
 
-    public static function modificarUsuario($usuario)
+    public static function modificar($usuario)
     {
         $objAccesoDato = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDato->prepararConsulta("UPDATE usuarios SET usuario = :usuario, clave = :clave, rol = :rol WHERE id = :id");
@@ -79,7 +82,7 @@ class Usuario
         $consulta->execute();
     }
 
-    public static function borrarUsuario($usuario)
+    public static function borrar($usuario)
     {
         $objAccesoDato = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDato->prepararConsulta("UPDATE usuarios SET fechaBaja = :fechaBaja WHERE id = :id");

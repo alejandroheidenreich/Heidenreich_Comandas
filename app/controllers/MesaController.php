@@ -12,7 +12,10 @@ class MesaController extends Mesa implements IApiUse
 
     $mesa = new Mesa();
 
-    $mesa->crearMesa($estado);
+    $mesa->estado = $estado;
+
+    Mesa::crear($mesa);
+
 
     $payload = json_encode(array("mensaje" => "Mesa creada con exito"));
 
@@ -21,14 +24,15 @@ class MesaController extends Mesa implements IApiUse
       ->withHeader('Content-Type', 'application/json');
   }
 
-  public static function TraerUnoPorPropiedad($request, $response, $args, $propiedad)
+  public static function TraerUnoPorPropiedad($request, $response, $args)
   {
 
-    $valor = $args[$propiedad];
-    $mesa = Mesa::obtenerMesa($propiedad, $valor);
+    $propiedad = $args['propiedad'];
+    $valor = $args['valor'];
+    $mesa = Mesa::obtenerUno($propiedad, $valor);
     $payload = json_encode($mesa);
 
-    $response->getBody()->write($payload);
+    $response->getBody()->write('$payload');
     return $response
       ->withHeader('Content-Type', 'application/json');
   }
@@ -49,7 +53,7 @@ class MesaController extends Mesa implements IApiUse
     $parametros = $request->getParsedBody();
 
     $nombre = $parametros['nombre'];
-    Usuario::modificarUsuario($nombre);
+    Mesa::modificar($nombre);
 
     $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
 
@@ -62,10 +66,10 @@ class MesaController extends Mesa implements IApiUse
   {
     $parametros = $request->getParsedBody();
 
-    $usuarioId = $parametros['usuarioId'];
-    Usuario::borrarUsuario($usuarioId);
+    $mesaId = $parametros['mesaId'];
+    Mesa::borrar($mesaId);
 
-    $payload = json_encode(array("mensaje" => "Usuario borrado con exito"));
+    $payload = json_encode(array("mensaje" => "mesa borrada con exito"));
 
     $response->getBody()->write($payload);
     return $response
