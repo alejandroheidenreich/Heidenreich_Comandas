@@ -56,11 +56,11 @@ class Producto implements IPersistencia
         return $consulta->fetchAll(PDO::FETCH_CLASS, 'Producto');
     }
 
-    public static function obtenerUno($propiedad, $valor)
+    public static function obtenerUno($valor)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDatos->prepararConsulta("SELECT id, descripcion, tipo, precio FROM producto WHERE :propiedad = :valor");
-        $consulta->bindValue(':propiedad', $propiedad, PDO::PARAM_STR);
+        //$consulta->bindValue(':propiedad', $propiedad, PDO::PARAM_STR);
         $consulta->bindValue(':valor', $valor, PDO::PARAM_STR);
         $consulta->execute();
 

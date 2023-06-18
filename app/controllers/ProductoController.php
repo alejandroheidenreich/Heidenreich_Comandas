@@ -27,7 +27,7 @@ class ProductoController extends Producto implements IApiUse
       ->withHeader('Content-Type', 'application/json');
   }
 
-  public static function TraerUnoPorPropiedad($request, $response, $args)
+  public static function TraerUno($request, $response, $args)
   {
     $propiedad = $args['propiedad'];
     $valor = $args['valor'];

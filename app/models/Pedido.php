@@ -2,6 +2,7 @@
 
 require_once './models/Estado.php';
 require_once './models/GeneradorCodigo.php';
+
 class Pedido implements IPersistencia
 {
     public $id;
@@ -13,7 +14,9 @@ class Pedido implements IPersistencia
     public $estado;
     public $tiempoEstimado;
     public $tiempoInicio;
-    public $tiempoFinal;
+    public $tiempoEntregado;
+    public $fechaBaja;
+
 
     public function __get($propiedad)
     {
@@ -36,9 +39,10 @@ class Pedido implements IPersistencia
 
     public static function crear($pedido)
     {
+        //TODO: agregar id factura
         $codigo = GenerarCodigo(5);
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedidos (codigoPedido, idMesa, idProducto, nombreCliente, estado) VALUES (:codigoPedido, :idMesa, :idProducto, :nombreCliente, :estado)");
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedidos (codigoPedido, idMesa, idProducto, idFactura, nombreCliente, estado) VALUES (:codigoPedido, :idMesa, :idProducto, :idFactura, :nombreCliente, :estado)");
         $consulta->bindValue(':codigoPedido', $codigo, PDO::PARAM_STR);
         $consulta->bindValue(':idMesa', $pedido->idMesa, PDO::PARAM_INT);
         $consulta->bindValue(':idProducto', $pedido->idProducto, PDO::PARAM_INT);
@@ -52,18 +56,18 @@ class Pedido implements IPersistencia
     public static function obtenerTodos()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, codigoPedido, idMesa, idProducto, nombreCliente, estado, tiempoEstimado, tiempoInicio, tiempoFinal, fechaBaja FROM pedidos");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, codigoPedido, idMesa, idProducto, idFactura, nombreCliente, estado, tiempoEstimado, tiempoInicio, tiempoFinal, fechaBaja FROM pedidos");
 
         $consulta->execute();
 
         return $consulta->fetchAll(PDO::FETCH_CLASS, 'Pedido');
     }
 
-    public static function obtenerUno($propiedad, $valor)
+    public static function obtenerUno($valor)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT numeroPedido, idMesa, puntaje, encuesta FROM pedidos WHERE :propiedad = :valor");
-        $consulta->bindValue(':propiedad', $propiedad, PDO::PARAM_STR);
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, codigoPedido, idMesa, idProducto, idFactura, nombreCliente, estado, tiempoEstimado, tiempoInicio, tiempoFinal, fechaBaja FROM pedidos WHERE :propiedad = :valor");
+        //$consulta->bindValue(':propiedad', $propiedad, PDO::PARAM_STR);
         $consulta->bindValue(':valor', $valor, PDO::PARAM_STR);
         $consulta->execute();
 

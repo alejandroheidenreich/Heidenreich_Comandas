@@ -1,6 +1,7 @@
 <?php
 require_once './models/Usuario.php';
 require_once './interfaces/IApiUse.php';
+require_once './middlewares/Roles.php';
 
 class UsuarioController extends Usuario implements IApiUse
 {
@@ -8,31 +9,50 @@ class UsuarioController extends Usuario implements IApiUse
   {
     $parametros = $request->getParsedBody();
 
-    $usuario = $parametros['usuario'];
-    $clave = $parametros['clave'];
-    $rol = $parametros['rol'];
+    $token = $parametros['token'];
 
-    $user = new Usuario();
-    $user->usuario = $usuario;
-    $user->clave = $clave;
-    $user->rol = $rol;
+    $usuarioAutorizado = Roles::ValidarSoloUnRole("socio", $token);
 
-    Usuario::crear($user);
+    if ($usuarioAutorizado != null) {
 
-    $payload = json_encode(array("mensaje" => "Usuario creado con exito"));
+      $usuario = $parametros['usuario'];
+      $clave = $parametros['clave'];
+      $rol = $parametros['rol'];
+
+      if (Usuario::ValidarRol($rol) && Usuario::ValidarUserName($usuario) == null) {
+        $payload = json_encode(array("error" => "Creacion de usuario fallida"));
+      } else {
+        $user = new Usuario();
+        $user->usuario = $usuario;
+        $user->clave = $clave;
+        $user->rol = $rol;
+
+        Usuario::crear($user);
+        $payload = json_encode(array("mensaje" => "Usuario creado con exito"));
+      }
+    } else {
+      $payload = json_encode(array("mensaje" => "No tienes permisos para realizar esta accion", "usuario" => $usuarioAutorizado));
+    }
 
     $response->getBody()->write($payload);
     return $response
       ->withHeader('Content-Type', 'application/json');
   }
 
-  public static function TraerUnoPorPropiedad($request, $response, $args)
+  public static function TraerUno($request, $response, $args)
   {
-    $propiedad = $args['propiedad'];
-    $valor = $args['valor'];
+    $parametros = $request->getParsedBody();
+    $token = $parametros['token'];
 
-    $usuario = Usuario::obtenerUno($propiedad, $valor);
-    $payload = json_encode($usuario);
+    $usuarioAutorizado = Roles::ValidarSoloUnRole("socio", $token);
+    if ($usuarioAutorizado != null) {
+      $usuario = $args['usuario'];
+
+      $usuario = Usuario::obtenerUno($usuario);
+      $payload = json_encode($usuario);
+    } else {
+      $payload = json_encode(array("mensaje" => "No tienes permisos para realizar esta accion", "usuario" => $usuarioAutorizado));
+    }
 
     $response->getBody()->write($payload);
     return $response
@@ -42,8 +62,17 @@ class UsuarioController extends Usuario implements IApiUse
 
   public static function TraerTodos($request, $response, $args)
   {
-    $lista = Usuario::obtenerTodos();
-    $payload = json_encode(array("listaUsuario" => $lista));
+    $parametros = $request->getParsedBody();
+    $token = $parametros['token'];
+
+    $usuarioAutorizado = Roles::ValidarSoloUnRole("socio", $token);
+
+    if ($usuarioAutorizado != null) {
+      $lista = Usuario::obtenerTodos();
+      $payload = json_encode(array("listaUsuario" => $lista));
+    } else {
+      $payload = json_encode(array("mensaje" => "No tienes permisos para realizar esta accion", "usuario" => $usuarioAutorizado));
+    }
 
     $response->getBody()->write($payload);
     return $response
@@ -54,10 +83,23 @@ class UsuarioController extends Usuario implements IApiUse
   {
     $parametros = $request->getParsedBody();
 
-    $nombre = $parametros['nombre'];
-    Usuario::modificar($nombre);
+    $token = $parametros['token'];
 
-    $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
+    $usuarioAutorizado = Roles::ValidarSoloUnRole("socio", $token);
+
+    if ($usuarioAutorizado != null) {
+      $nombre = $parametros['nombre'];
+      $usuario = Usuario::obtenerUno($nombre);
+
+      if ($usuario != null) {
+        Usuario::modificar($usuario);
+        $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
+      } else {
+        $payload = json_encode(array("error" => "Usuario no existe"));
+      }
+    } else {
+      $payload = json_encode(array("mensaje" => "No tienes permisos para realizar esta accion", "usuario" => $usuarioAutorizado));
+    }
 
     $response->getBody()->write($payload);
     return $response
@@ -68,10 +110,49 @@ class UsuarioController extends Usuario implements IApiUse
   {
     $parametros = $request->getParsedBody();
 
-    $usuarioId = $parametros['usuarioId'];
-    Usuario::borrar($usuarioId);
+    $token = $parametros['token'];
 
-    $payload = json_encode(array("mensaje" => "Usuario borrado con exito"));
+    $usuarioAutorizado = Roles::ValidarSoloUnRole("socio", $token);
+
+    if ($usuarioAutorizado != null) {
+
+      $usuarioId = $parametros['usuarioId'];
+      Usuario::borrar($usuarioId);
+
+      $payload = json_encode(array("mensaje" => "Usuario borrado con exito"));
+    } else {
+      $payload = json_encode(array("mensaje" => "No tienes permisos para realizar esta accion", "usuario" => $usuarioAutorizado));
+    }
+
+    $response->getBody()->write($payload);
+    return $response
+      ->withHeader('Content-Type', 'application/json');
+  }
+
+  public static function LogIn($request, $response, $args)
+  {
+    $parametros = $request->getParsedBody();
+    $user = $parametros['usuario'];
+    $clave = $parametros['clave'];
+
+    $usuario = Usuario::obtenerUno($user);
+
+    if ($usuario != null) {
+      if (password_verify($clave, $usuario->clave)) {
+        $data = array('usuario' => $usuario->usuario, 'clave' => $usuario->clave);
+        $creacion = AutentificadorJWT::CrearToken($data);
+        $usuario->token = $creacion['jwt'];
+        $usuario->expToken = $creacion['token']['exp'];
+
+        Usuario::modificar($usuario);
+        $payload = json_encode(array("mensaje" => "Usuario logeado", "token" => $usuario->token));
+      } else {
+        $payload = json_encode(array("mensaje" => "Usuario invalido", "Error" => "Clave invalida"));
+      }
+
+    } else {
+      $payload = json_encode(array("mensaje" => "Usuario invalido", "Error" => "Usuario no existe"));
+    }
 
     $response->getBody()->write($payload);
     return $response

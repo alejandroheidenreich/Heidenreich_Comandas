@@ -1,5 +1,6 @@
 <?php
 require_once './models/Pedido.php';
+require_once './models/Factura.php';
 require_once './interfaces/IApiUse.php';
 
 class PedidoController extends Pedido implements IApiUse
@@ -13,23 +14,38 @@ class PedidoController extends Pedido implements IApiUse
     $idProducto = $parametros['idProducto'];
     $nombreCliente = $parametros['nombreCliente'];
 
+    if (isset($parametros['idFactura'])) {
+      $idFactura = $parametros['idFactura'];
+    } else {
+
+      $factura = new Factura();
+      // TODO: como manejar img con slim
+      $fotoMesa = $request->getUploadedFiles();
+      if (is_uploaded_file($parametros['fotoMesa'])) {
+        $fechaHoy = new DateTime();
+        $fecha = date_format($fechaHoy, 'Y-m-d H:i:s');
+        $factura->GuardarImagen($parametros['fotoMesa']['tmp_name'], "{$nombreCliente}_{$fecha}");
+      }
+      $idFactura = Factura::crear($factura);
+    }
+
     $pedido = new Pedido();
     $pedido->idMesa = $idMesa;
     $pedido->idProducto = $idProducto;
     $pedido->nombreCliente = $nombreCliente;
+    $pedido->idFactura = intval($idFactura);
 
     Pedido::crear($pedido);
 
-    $payload = json_encode(array("mensaje" => "Pedido creado con exito"));
+    $payload = json_encode(array("mensaje" => $idFactura));
 
     $response->getBody()->write($payload);
     return $response
       ->withHeader('Content-Type', 'application/json');
   }
 
-  public static function TraerUnoPorPropiedad($request, $response, $args)
+  public static function TraerUno($request, $response, $args)
   {
-
     $propiedad = $args['propiedad'];
     $valor = $args['valor'];
     $pedido = Pedido::obtenerUno($propiedad, $valor);

@@ -8,7 +8,7 @@ class Factura implements IPersistencia
     public $estado;
     public $fotoMesa;
     public $puntaje;
-    public $encuesta;
+    public $encuesta; //entidad
     public $fechaBaja;
 
     public function __get($propiedad)
@@ -29,12 +29,12 @@ class Factura implements IPersistencia
         }
     }
 
-    public function crear($fotoMesa = 'Sin foto')
+    public static function crear($factura)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO facturas (estado, fotoMesa) VALUES (:estado, :fotoMesa)");
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO facturas (estado/*, fotoMesa*/) VALUES (:estado/*, :fotoMesa*/)");
         $consulta->bindValue(':estado', Estado::PENDIENTE, PDO::PARAM_STR);
-        $consulta->bindValue(':fotoMesa', $fotoMesa, PDO::PARAM_STR);
+        //$consulta->bindValue(':fotoMesa', $factura->fotoMesa, PDO::PARAM_STR);
         $consulta->execute();
 
         return $objAccesoDatos->obtenerUltimoId();
@@ -49,11 +49,11 @@ class Factura implements IPersistencia
         return $consulta->fetchAll(PDO::FETCH_CLASS, 'Factura');
     }
 
-    public static function obtenerUno($propiedad, $valor)
+    public static function obtenerUno($valor)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDatos->prepararConsulta("SELECT id, precioTotal, estado, fotoMesa, puntaje, encuesta, fechaBaja FROM pedidos WHERE :propiedad = :valor");
-        $consulta->bindValue(':propiedad', $propiedad, PDO::PARAM_STR);
+        //$consulta->bindValue(':propiedad', $propiedad, PDO::PARAM_STR);
         $consulta->bindValue(':valor', $valor, PDO::PARAM_STR);
         $consulta->execute();
 
@@ -80,6 +80,18 @@ class Factura implements IPersistencia
         $consulta->bindValue(':id', $factura->id, PDO::PARAM_INT);
         $consulta->bindValue(':fechaBaja', date_format($fecha, 'Y-m-d H:i:s'));
         $consulta->execute();
+    }
+
+    public function GuardarImagen($imagen, $nombreArchivo)
+    {
+        if ($imagen) {
+            $ruta_archivo = './imgs/' . $nombreArchivo . ".jpg";
+            if (move_uploaded_file($imagen, $ruta_archivo)) {
+                $this->fotoMesa = $ruta_archivo;
+            } else {
+                echo "Error en la imagen" . PHP_EOL;
+            }
+        }
     }
 
 }
