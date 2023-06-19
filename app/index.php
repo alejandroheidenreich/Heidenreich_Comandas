@@ -29,10 +29,20 @@ $app = AppFactory::create();
 //$app->setBasePath('/app');
 
 // Add error middleware
-$errorMiddleware = function ($request, $response, $exception) {
-  return $response->withStatus(500)->withJson(['error' => $exception->getMessage()]);
+$errorMiddleware = function ($request, $exception, $displayErrorDetails) use ($app) {
+  $statusCode = 500;
+  $errorMessage = $exception->getMessage();
+
+  // Lógica adicional para determinar el código de estado y el mensaje de error según la excepción
+
+  $response = $app->getResponseFactory()->createResponse($statusCode);
+  $response->getBody()->write(json_encode(['error' => $errorMessage]));
+
+  return $response->withHeader('Content-Type', 'application/json');
 };
-$app->addErrorMiddleware(true, true, true, $errorMiddleware);
+
+$app->addErrorMiddleware(true, true, true)
+  ->setDefaultErrorHandler($errorMiddleware);
 
 
 
@@ -72,7 +82,7 @@ $app->addErrorMiddleware(true, true, true, $errorMiddleware);
 $app->group('/usuarios', function (RouteCollectorProxy $group) {
   $group->get('[/]', \UsuarioController::class . '::TraerTodos');
   $group->get('/{usuario}', \UsuarioController::class . '::TraerUno');
-  $group->post('[/]', \UsuarioController::class . '::CargarUno')->add(Autentificador::class . '::ValidarSocio');
+  $group->post('[/]', \UsuarioController::class . '::CargarUno')->add(\Autentificador::class . '::ValidarSocio');
 });
 
 $app->group('/productos', function (RouteCollectorProxy $group) {

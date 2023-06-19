@@ -12,7 +12,7 @@ class Autentificador{
         $usuarioAutorizado = Usuario::BuscarPorToken($token);
 
         if ($usuarioAutorizado != null && $usuarioAutorizado->rol == 'socio' /*&& Usuario::ValidarExpiracionToken($usuarioAutorizado)*/) {
-            return $next($request, $response);
+            return /*$next($request, */$response/*)*/;
         }
 
         throw new Exception("Token no valido");
