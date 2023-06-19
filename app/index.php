@@ -8,6 +8,8 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Factory\AppFactory;
 use Slim\Routing\RouteCollectorProxy;
 use Slim\Routing\RouteContext;
+use Slim\Cookie\Cookie;
+
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -19,7 +21,7 @@ require_once './controllers/UsuarioController.php';
 require_once './controllers/ProductoController.php';
 require_once './controllers/MesaController.php';
 require_once './controllers/PedidoController.php';
-
+date_default_timezone_set('America/Argentina/Buenos_Aires');
 // Load ENV
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->safeLoad();
@@ -32,9 +34,6 @@ $app = AppFactory::create();
 $errorMiddleware = function ($request, $exception, $displayErrorDetails) use ($app) {
   $statusCode = 500;
   $errorMessage = $exception->getMessage();
-
-  // Lógica adicional para determinar el código de estado y el mensaje de error según la excepción
-
   $response = $app->getResponseFactory()->createResponse($statusCode);
   $response->getBody()->write(json_encode(['error' => $errorMessage]));
 
@@ -47,63 +46,40 @@ $app->addErrorMiddleware(true, true, true)
 $app->addBodyParsingMiddleware();
 
 
-// $parametros = $request->getParsedBody();
-
-//     $token = $parametros['token'];
-
-//     $usuarioAutorizado = Roles::ValidarSoloUnRole("socio", $token);
-
-//     if ($usuarioAutorizado != null) {
-
-//       $usuario = $parametros['usuario'];
-//       $clave = $parametros['clave'];
-//       $rol = $parametros['rol'];
-
-//       if (Usuario::ValidarRol($rol) && Usuario::ValidarUserName($usuario) == null) {
-//         $payload = json_encode(array("error" => "Creacion de usuario fallida"));
-//       } else {
-//         $user = new Usuario();
-//         $user->usuario = $usuario;
-//         $user->clave = $clave;
-//         $user->rol = $rol;
-
-//         Usuario::crear($user);
-//         $payload = json_encode(array("mensaje" => "Usuario creado con exito"));
-//       }
-//     } else {
-//       $payload = json_encode(array("mensaje" => "No tienes permisos para realizar esta accion", "usuario" => $usuarioAutorizado));
-//     }
-
-//     $response->getBody()->write($payload);
-//     return $response
-//       ->withHeader('Content-Type', 'application/json');
-
 
 // ABM Routes
 $app->group('/usuarios', function (RouteCollectorProxy $group) {
-  $group->get('[/]', \UsuarioController::class . '::TraerTodos')->add(\Autentificador::class . '::ValidarSocioGet');
-  $group->get('/{usuario}', \UsuarioController::class . '::TraerUno')->add(\Autentificador::class . '::ValidarSocioGet');
-  $group->post('[/]', \UsuarioController::class . '::CargarUno')->add(\Autentificador::class . '::ValidarSocioPost');
-  $group->put('/{id}', \UsuarioController::class . '::CargarUno')->add(\Autentificador::class . '::ValidarSocioPost');
+  $group->get('[/]', \UsuarioController::class . '::TraerTodos')->add(\Autentificador::class . '::ValidarSocio');
+  $group->get('/{usuario}', \UsuarioController::class . '::TraerUno')->add(\Autentificador::class . '::ValidarSocio');
+  $group->post('[/]', \UsuarioController::class . '::CargarUno')->add(\Autentificador::class . '::ValidarSocio');
+  $group->put('/{id}', \UsuarioController::class . '::ModificarUno')->add(\Autentificador::class . '::ValidarSocio');
+  $group->delete('/{id}', \UsuarioController::class . '::BorrarUno')->add(\Autentificador::class . '::ValidarSocio');
 });
 
 $app->group('/productos', function (RouteCollectorProxy $group) {
-  $group->get('[/]', \ProductoController::class . '::TraerTodos')->add(\Autentificador::class . '::ValidarSocioGet');
-  $group->get('/consulta', \ProductoController::class . '::TraerUno')->add(\Autentificador::class . '::ValidarSocioGet');
-  $group->post('[/]', \ProductoController::class . '::CargarUno')->add(\Autentificador::class . '::ValidarSocioPost');
+  $group->get('[/]', \ProductoController::class . '::TraerTodos')->add(\Autentificador::class . '::ValidarSocio');
+  $group->get('/consulta', \ProductoController::class . '::TraerUno')->add(\Autentificador::class . '::ValidarSocio');
+  $group->post('[/]', \ProductoController::class . '::CargarUno')->add(\Autentificador::class . '::ValidarSocio');
+  $group->put('/{id}', \ProductoController::class . '::ModificarUno')->add(\Autentificador::class . '::ValidarSocio');
+  $group->delete('/{id}', \ProductoController::class . '::BorrarUno')->add(\Autentificador::class . '::ValidarSocio');
 });
 
 $app->group('/mesas', function (RouteCollectorProxy $group) {
-  $group->get('[/]', \MesaController::class . '::TraerTodos')->add(\Autentificador::class . '::ValidarSocioGet');
-  $group->get('/consulta', \MesaController::class . '::TraerUno')->add(\Autentificador::class . '::ValidarSocioGet');
-  $group->post('[/]', \MesaController::class . '::CargarUno')->add(\Autentificador::class . '::ValidarSocioPost');
+  $group->get('[/]', \MesaController::class . '::TraerTodos')->add(\Autentificador::class . '::ValidarSocio');
+  $group->get('/consulta', \MesaController::class . '::TraerUno')->add(\Autentificador::class . '::ValidarSocio');
+  $group->post('[/]', \MesaController::class . '::CargarUno')->add(\Autentificador::class . '::ValidarSocio');
+  $group->put('/{id}', \MesaController::class . '::ModificarUno')->add(\Autentificador::class . '::ValidarSocio');
+  $group->delete('/{id}', \MesaController::class . '::BorrarUno')->add(\Autentificador::class . '::ValidarSocio');
 });
 
 $app->group('/pedidos', function (RouteCollectorProxy $group) {
-  $group->get('[/]', \PedidoController::class . '::TraerTodos')->add(\Autentificador::class . '::ValidarMozoGet');
-  $group->get('/pendientes', \PedidoController::class . '::TraerPendientes')->add(\Autentificador::class . '::ValidarPreparadorGet');
-  $group->get('/consulta', \PedidoController::class . '::TraerPorPropiedad')->add(\Autentificador::class . '::ValidarMozoGet');
-  $group->post('[/]', \PedidoController::class . '::CargarUno')->add(\Autentificador::class . '::ValidarMozoPost');
+  $group->get('[/]', \PedidoController::class . '::TraerTodos')->add(\Autentificador::class . '::ValidarMozo');
+  $group->get('/pendientes', \PedidoController::class . '::TraerPendientes')->add(\Autentificador::class . '::ValidarPreparador');
+  $group->post('/inicio/{id}', \PedidoController::class . '::IniciarPedido')->add(\Autentificador::class . '::ValidarPreparador');
+  $group->post('/final/{id}', \PedidoController::class . '::FinalizarPedido')->add(\Autentificador::class . '::ValidarPreparador');
+  $group->post('/entregar/{id}', \PedidoController::class . '::EntregarPedido')->add(\Autentificador::class . '::ValidarMozo');
+  $group->get('/consulta', \PedidoController::class . '::TraerUno')->add(\Autentificador::class . '::ValidarMozo');
+  $group->post('[/]', \PedidoController::class . '::CargarUno')->add(\Autentificador::class . '::ValidarMozo');
 });
 
 

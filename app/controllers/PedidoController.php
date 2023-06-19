@@ -17,13 +17,13 @@ class PedidoController extends Pedido implements IApiUse
     $idProducto = $parametros['idProducto'];
     $nombreCliente = $parametros['nombreCliente'];
 
-   
+
     $pedido = new Pedido();
     $pedido->idMesa = $idMesa;
-    
+
     $pedido->idProducto = $idProducto;
     $pedido->nombreCliente = $nombreCliente;
-    
+
     $mesa = Mesa::obtenerUno($idMesa);
 
     if ($mesa->estado == Estado::CERRADA) {
@@ -45,9 +45,8 @@ class PedidoController extends Pedido implements IApiUse
 
   public static function TraerUno($request, $response, $args)
   {
-    $propiedad = $args['propiedad'];
     $valor = $args['valor'];
-    $pedido = Pedido::obtenerUno($propiedad, $valor);
+    $pedido = Pedido::obtenerUno($valor);
     $payload = json_encode($pedido);
 
     $response->getBody()->write($payload);
@@ -70,13 +69,14 @@ class PedidoController extends Pedido implements IApiUse
   {
     $listaPendientes = Pedido::obtenerPendientes();
     $lista = [];
-    $parametros = $request->getQueryParams();
-        
-    $token = $parametros['token'];
+    $cookies = $request->getCookieParams();
+
+
+    $token = $cookies['token'];
     $data = AutentificadorJWT::ObtenerData($token);
     foreach ($listaPendientes as $pedido) {
-      
-      if((Producto::obtenerUno($pedido->idProducto))->tipo == $data->rol ){
+
+      if ((Producto::obtenerUno($pedido->idProducto))->tipo == $data->rol) {
         $lista[] = $pedido;
       }
     }
@@ -109,6 +109,85 @@ class PedidoController extends Pedido implements IApiUse
     Pedido::borrar($pedidoId);
 
     $payload = json_encode(array("mensaje" => "pedido borrado con exito"));
+
+    $response->getBody()->write($payload);
+    return $response
+      ->withHeader('Content-Type', 'application/json');
+  }
+
+  public static function IniciarPedido($request, $response, $args)
+  {
+    $parametros = $request->getParsedBody();
+
+    $id = $args['id'];
+
+    $tiempoEstimado = $parametros['tiempoEstimado'];
+    $pedido = Pedido::obtenerUno($id);
+    if ($pedido) {
+      $cookies = $request->getCookieParams();
+      $token = $cookies['token'];
+      $data = AutentificadorJWT::ObtenerData($token);
+      //echo (Producto::obtenerUno($pedido->idProducto))->tipo . " == " . $data->rol;
+      if ((Producto::obtenerUno($pedido->idProducto))->tipo == $data->rol) {
+        Pedido::iniciar($id, $tiempoEstimado);
+        $payload = json_encode(array("mensaje" => "Pedido en Preparacion"));
+      } else {
+        $payload = json_encode(array("mensaje" => "No tienes permisos para iniciar este pedido"));
+      }
+
+    } else {
+      $payload = json_encode(array("mensaje" => "ID no coinciden con ningun Pedido"));
+    }
+
+    $response->getBody()->write($payload);
+    return $response
+      ->withHeader('Content-Type', 'application/json');
+  }
+  public static function FinalizarPedido($request, $response, $args)
+  {
+    $parametros = $request->getParsedBody();
+
+    $id = $args['id'];
+
+
+    $pedido = Pedido::obtenerUno($id);
+    if ($pedido) {
+      $cookies = $request->getCookieParams();
+      $token = $cookies['token'];
+      $data = AutentificadorJWT::ObtenerData($token);
+
+      if ((Producto::obtenerUno($pedido->idProducto))->tipo == $data->rol && $pedido->estado == Estado::PREPARACION) {
+        Pedido::finalizar($id);
+        $payload = json_encode(array("mensaje" => "Pedido listo para servir"));
+      } else {
+        $payload = json_encode(array("mensaje" => "No tienes permisos para finalizar este pedido"));
+      }
+
+    } else {
+      $payload = json_encode(array("mensaje" => "ID no coinciden con ningun Pedido"));
+    }
+
+    $response->getBody()->write($payload);
+    return $response
+      ->withHeader('Content-Type', 'application/json');
+  }
+  public static function EntregarPedido($request, $response, $args)
+  {
+    $id = $args['id'];
+
+    $pedido = Pedido::obtenerUno($id);
+    if ($pedido) {
+
+      if ($pedido->estado == Estado::LISTO) {
+        Pedido::entregar($id);
+        $payload = json_encode(array("mensaje" => "Pedido entregado"));
+      } else {
+        $payload = json_encode(array("mensaje" => "El pedido no esta listo"));
+      }
+
+    } else {
+      $payload = json_encode(array("mensaje" => "ID no coinciden con ningun Pedido"));
+    }
 
     $response->getBody()->write($payload);
     return $response

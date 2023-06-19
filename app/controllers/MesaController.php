@@ -1,6 +1,8 @@
 <?php
 require_once './models/Mesa.php';
+require_once './models/Estado.php';
 require_once './interfaces/IApiUse.php';
+require_once './middlewares/Autentificador.php';
 
 class MesaController extends Mesa implements IApiUse
 {
@@ -21,9 +23,9 @@ class MesaController extends Mesa implements IApiUse
   public static function TraerUno($request, $response, $args)
   {
 
-    $propiedad = $args['propiedad'];
+
     $valor = $args['valor'];
-    $mesa = Mesa::obtenerUno($propiedad, $valor);
+    $mesa = Mesa::obtenerUno($valor);
     $payload = json_encode($mesa);
 
     $response->getBody()->write('$payload');
@@ -44,12 +46,28 @@ class MesaController extends Mesa implements IApiUse
 
   public static function ModificarUno($request, $response, $args)
   {
-    $parametros = $request->getParsedBody();
+    $id = $args['id'];
 
-    $nombre = $parametros['nombre'];
-    Mesa::modificar($nombre);
+    $mesa = Mesa::obtenerUno($id);
 
-    $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
+    if ($mesa != null) {
+      $parametros = $request->getParsedBody();
+
+      $actualizado = false;
+      if (isset($parametros['estado'])) {
+        $actualizado = true;
+        $mesa->estado = $parametros['estado'];
+      }
+
+      if ($actualizado) {
+        Mesa::modificar($mesa);
+        $payload = json_encode(array("mensaje" => "Mesa modificada con exito"));
+      } else {
+        $payload = json_encode(array("mensaje" => "Mesa no modificada por falta de campos"));
+      }
+    } else {
+      $payload = json_encode(array("mensaje" => "ID no coinciden con ninguna Mesa"));
+    }
 
     $response->getBody()->write($payload);
     return $response
@@ -58,12 +76,14 @@ class MesaController extends Mesa implements IApiUse
 
   public static function BorrarUno($request, $response, $args)
   {
-    $parametros = $request->getParsedBody();
+    $id = $args['id'];
 
-    $mesaId = $parametros['mesaId'];
-    Mesa::borrar($mesaId);
-
-    $payload = json_encode(array("mensaje" => "mesa borrada con exito"));
+    if (Mesa::obtenerUno($id)) {
+      Mesa::borrar($id);
+      $payload = json_encode(array("mensaje" => "mesa borrada con exito"));
+    } else {
+      $payload = json_encode(array("mensaje" => "ID no coinciden con ninguna Mesa"));
+    }
 
     $response->getBody()->write($payload);
     return $response

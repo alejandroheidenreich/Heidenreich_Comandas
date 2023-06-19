@@ -6,6 +6,7 @@ class Estado
     const COMIENDO = 'Comiendo';
     const PAGANDO = 'Pagando';
     const CERRADA = 'Cerrada';
+    const BAJA = 'Baja';
 
 
     const PENDIENTE = 'Pendiente';

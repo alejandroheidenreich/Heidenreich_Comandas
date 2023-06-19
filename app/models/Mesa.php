@@ -3,6 +3,7 @@
 require_once './models/Estado.php';
 require_once './models/GeneradorCodigo.php';
 
+
 class Mesa implements IPersistencia
 {
     public $id;
@@ -70,13 +71,13 @@ class Mesa implements IPersistencia
 
     }
 
-    public static function borrar($mesa)
+    public static function borrar($id)
     {
         $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("UPDATE mesas SET fechaBaja = :fechaBaja WHERE id = :id");
+        $consulta = $objAccesoDato->prepararConsulta("UPDATE mesas SET estado = :estado WHERE id = :id");
         $fecha = new DateTime(date("d-m-Y"));
-        $consulta->bindValue(':id', $mesa->id, PDO::PARAM_STR);
-        $consulta->bindValue(':fechaBaja', date_format($fecha, 'Y-m-d H:i:s'));
+        $consulta->bindValue(':id', $id, PDO::PARAM_STR);
+        $consulta->bindValue(':estado', Estado::BAJA, PDO::PARAM_STR);
         $consulta->execute();
     }
 }

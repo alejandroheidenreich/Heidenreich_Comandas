@@ -29,9 +29,8 @@ class ProductoController extends Producto implements IApiUse
 
   public static function TraerUno($request, $response, $args)
   {
-    $propiedad = $args['propiedad'];
     $valor = $args['valor'];
-    $product = Producto::obtenerUno($propiedad, $valor);
+    $product = Producto::obtenerUno($valor);
     $payload = json_encode($product);
 
     $response->getBody()->write($payload);
@@ -52,12 +51,37 @@ class ProductoController extends Producto implements IApiUse
 
   public static function ModificarUno($request, $response, $args)
   {
-    $parametros = $request->getParsedBody();
 
-    $nombre = $parametros['nombre'];
-    Producto::modificar($nombre);
+    $id = $args['id'];
 
-    $payload = json_encode(array("mensaje" => "Producto modificado con exito"));
+    $producto = Producto::obtenerUno($id);
+
+    if ($producto != null) {
+      $parametros = $request->getParsedBody();
+
+      $actualizado = false;
+      if (isset($parametros['descripcion'])) {
+        $actualizado = true;
+        $producto->descripcion = $parametros['descripcion'];
+      }
+      if (isset($parametros['tipo'])) {
+        $actualizado = true;
+        $producto->tipo = $parametros['tipo'];
+      }
+      if (isset($parametros['precio'])) {
+        $actualizado = true;
+        $producto->precio = $parametros['precio'];
+      }
+
+      if ($actualizado) {
+        Producto::modificar($producto);
+        $payload = json_encode(array("mensaje" => "Producto modificado con exito"));
+      } else {
+        $payload = json_encode(array("mensaje" => "Producto no modificar por falta de campos"));
+      }
+    } else {
+      $payload = json_encode(array("mensaje" => "ID no coinciden con ningun Producto"));
+    }
 
     $response->getBody()->write($payload);
     return $response
@@ -66,12 +90,16 @@ class ProductoController extends Producto implements IApiUse
 
   public static function BorrarUno($request, $response, $args)
   {
-    $parametros = $request->getParsedBody();
+    $id = $args['id'];
 
-    $productoId = $parametros['productoId'];
-    Producto::borrar($productoId);
+    if (Producto::obtenerUno($id)) {
+      Producto::borrar($id);
+      $payload = json_encode(array("mensaje" => "Producto borrado con exito"));
+    } else {
 
-    $payload = json_encode(array("mensaje" => "Mesa borrado con exito"));
+      $payload = json_encode(array("mensaje" => "ID no coincide con un Producto"));
+    }
+
 
     $response->getBody()->write($payload);
     return $response

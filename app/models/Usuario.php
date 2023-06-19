@@ -1,6 +1,7 @@
 <?php
 
 require_once './interfaces/IPersistencia.php';
+require_once './models/ROL.php';
 
 class Usuario implements IPersistencia
 {
@@ -78,7 +79,7 @@ class Usuario implements IPersistencia
     public static function obtenerUnoPorID($id)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, usuario, clave, rol, token, expiracionToken FROM usuarios WHERE id = :id");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, usuario, clave, rol, token, expiracionToken FROM usuarios WHERE id = :id AND fechaBaja IS NULL");
         $consulta->bindValue(':id', $id, PDO::PARAM_STR);
         $consulta->execute();
 
@@ -88,7 +89,8 @@ class Usuario implements IPersistencia
     public static function modificar($usuario)
     {
         $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("UPDATE usuarios SET usuario = :usuario, clave = :clave, rol = :rol, token = :token, expiracionToken = :expiracionToken WHERE id = :id");
+        $consulta = $objAccesoDato->prepararConsulta("UPDATE usuarios SET usuario = :usuario, clave = :clave, rol = :rol, token = :token, expiracionToken = :expiracionToken WHERE id = :id AND fechaBaja IS NULL");
+
         $consulta->bindValue(':usuario', $usuario->usuario, PDO::PARAM_STR);
         $consulta->bindValue(':clave', $usuario->clave, PDO::PARAM_STR);
         $consulta->bindValue(':rol', $usuario->rol, PDO::PARAM_STR);
@@ -98,19 +100,20 @@ class Usuario implements IPersistencia
         $consulta->execute();
     }
 
-    public static function borrar($usuario)
+    public static function borrar($id)
     {
         $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("UPDATE usuarios SET fechaBaja = :fechaBaja WHERE id = :id");
+        $consulta = $objAccesoDato->prepararConsulta("UPDATE usuarios SET fechaBaja = :fechaBaja WHERE id = :id AND fechaBaja IS NULL");
         $fecha = new DateTime(date("d-m-Y"));
-        $consulta->bindValue(':id', $usuario->id, PDO::PARAM_INT);
+        $consulta->bindValue(':id', $id, PDO::PARAM_INT);
         $consulta->bindValue(':fechaBaja', date_format($fecha, 'Y-m-d H:i:s'));
         $consulta->execute();
     }
 
     public static function ValidarRol($rol)
     {
-        if ($rol != 'socio' && $rol != 'bartender' && $rol != 'cervecero' && $rol != 'cocinero' && $rol != 'mozo') {
+
+        if ($rol != Rol::SOCIO && $rol != Rol::BARTENDER && $rol != Rol::CERVECERO && $rol != Rol::COCINERO && $rol != Rol::MOZO && $rol != Rol::CANDYBAR) {
             return false;
         }
         return true;
