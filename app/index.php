@@ -44,6 +44,7 @@ $errorMiddleware = function ($request, $exception, $displayErrorDetails) use ($a
 $app->addErrorMiddleware(true, true, true)
   ->setDefaultErrorHandler($errorMiddleware);
 
+$app->addBodyParsingMiddleware();
 
 
 // $parametros = $request->getParsedBody();
@@ -83,6 +84,7 @@ $app->group('/usuarios', function (RouteCollectorProxy $group) {
   $group->get('[/]', \UsuarioController::class . '::TraerTodos')->add(\Autentificador::class . '::ValidarSocioGet');
   $group->get('/{usuario}', \UsuarioController::class . '::TraerUno')->add(\Autentificador::class . '::ValidarSocioGet');
   $group->post('[/]', \UsuarioController::class . '::CargarUno')->add(\Autentificador::class . '::ValidarSocioPost');
+  $group->put('/{id}', \UsuarioController::class . '::CargarUno')->add(\Autentificador::class . '::ValidarSocioPost');
 });
 
 $app->group('/productos', function (RouteCollectorProxy $group) {

@@ -75,6 +75,16 @@ class Usuario implements IPersistencia
         return $consulta->fetchObject('Usuario');
     }
 
+    public static function obtenerUnoPorID($id)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, usuario, clave, rol, token, expiracionToken FROM usuarios WHERE id = :id");
+        $consulta->bindValue(':id', $id, PDO::PARAM_STR);
+        $consulta->execute();
+
+        return $consulta->fetchObject('Usuario');
+    }
+
     public static function modificar($usuario)
     {
         $objAccesoDato = AccesoDatos::obtenerInstancia();

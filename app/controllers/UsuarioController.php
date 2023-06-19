@@ -69,11 +69,23 @@ class UsuarioController extends Usuario implements IApiUse
   public static function ModificarUno($request, $response, $args)
   {
     
-    $nombre = $parametros['nombre'];
-    $usuario = Usuario::obtenerUno($nombre);
+    $id = $args['id'];
+
+    $usuario = Usuario::obtenerUnoPorID($id);
 
     if ($usuario != null) {
+      $parametros = $request->getParsedBody();
+
+      // $usuarioNombre = $parametros['usuario'];
+      // $usuarioNombre = $parametros['clave'];
+      // $usuarioNombre = $parametros['usuario'];
+      // $usuarioNombre = $parametros['usuario'];
+      // $usuarioNombre = $parametros['usuario'];
+      // $usuarioNombre = $parametros['usuario'];
+
+
       Usuario::modificar($usuario);
+
       $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
     } else {
       $payload = json_encode(array("error" => "Usuario no existe"));
