@@ -13,7 +13,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 require_once './db/AccesoDatos.php';
 require_once './middlewares/AutentificadorJWT.php';
-
+require_once './middlewares/Autentificador.php';
 
 require_once './controllers/UsuarioController.php';
 require_once './controllers/ProductoController.php';
@@ -29,14 +29,50 @@ $app = AppFactory::create();
 //$app->setBasePath('/app');
 
 // Add error middleware
-$app->addErrorMiddleware(true, true, true);
+$errorMiddleware = function ($request, $response, $exception) {
+  return $response->withStatus(500)->withJson(['error' => $exception->getMessage()]);
+};
+$app->addErrorMiddleware(true, true, true, $errorMiddleware);
+
+
+
+// $parametros = $request->getParsedBody();
+
+//     $token = $parametros['token'];
+
+//     $usuarioAutorizado = Roles::ValidarSoloUnRole("socio", $token);
+
+//     if ($usuarioAutorizado != null) {
+
+//       $usuario = $parametros['usuario'];
+//       $clave = $parametros['clave'];
+//       $rol = $parametros['rol'];
+
+//       if (Usuario::ValidarRol($rol) && Usuario::ValidarUserName($usuario) == null) {
+//         $payload = json_encode(array("error" => "Creacion de usuario fallida"));
+//       } else {
+//         $user = new Usuario();
+//         $user->usuario = $usuario;
+//         $user->clave = $clave;
+//         $user->rol = $rol;
+
+//         Usuario::crear($user);
+//         $payload = json_encode(array("mensaje" => "Usuario creado con exito"));
+//       }
+//     } else {
+//       $payload = json_encode(array("mensaje" => "No tienes permisos para realizar esta accion", "usuario" => $usuarioAutorizado));
+//     }
+
+//     $response->getBody()->write($payload);
+//     return $response
+//       ->withHeader('Content-Type', 'application/json');
 
 
 // ABM Routes
 $app->group('/usuarios', function (RouteCollectorProxy $group) {
   $group->get('[/]', \UsuarioController::class . '::TraerTodos');
   $group->get('/{usuario}', \UsuarioController::class . '::TraerUno');
-  $group->post('[/]', \UsuarioController::class . '::CargarUno');
+  $group->post('[/]', \UsuarioController::class . '::CargarUno')->add(Autentificador::class . '::ValidarSocio');
 });
 
 $app->group('/productos', function (RouteCollectorProxy $group) {

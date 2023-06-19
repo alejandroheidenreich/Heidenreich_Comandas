@@ -257,9 +257,7 @@ class Connection implements ConnectionInterface
      */
     protected function getDefaultQueryGrammar()
     {
-        ($grammar = new QueryGrammar)->setConnection($this);
-
-        return $grammar;
+        return new QueryGrammar;
     }
 
     /**
@@ -275,7 +273,7 @@ class Connection implements ConnectionInterface
     /**
      * Get the default schema grammar instance.
      *
-     * @return \Illuminate\Database\Schema\Grammars\Grammar|null
+     * @return \Illuminate\Database\Schema\Grammars\Grammar
      */
     protected function getDefaultSchemaGrammar()
     {
@@ -319,7 +317,7 @@ class Connection implements ConnectionInterface
     /**
      * Begin a fluent query against a database table.
      *
-     * @param  \Closure|\Illuminate\Database\Query\Builder|\Illuminate\Contracts\Database\Query\Expression|string  $table
+     * @param  \Closure|\Illuminate\Database\Query\Builder|string  $table
      * @param  string|null  $as
      * @return \Illuminate\Database\Query\Builder
      */
@@ -421,39 +419,6 @@ class Connection implements ConnectionInterface
             $statement->execute();
 
             return $statement->fetchAll();
-        });
-    }
-
-    /**
-     * Run a select statement against the database and returns all of the result sets.
-     *
-     * @param  string  $query
-     * @param  array  $bindings
-     * @param  bool  $useReadPdo
-     * @return array
-     */
-    public function selectResultSets($query, $bindings = [], $useReadPdo = true)
-    {
-        return $this->run($query, $bindings, function ($query, $bindings) use ($useReadPdo) {
-            if ($this->pretending()) {
-                return [];
-            }
-
-            $statement = $this->prepared(
-                $this->getPdoForSelect($useReadPdo)->prepare($query)
-            );
-
-            $this->bindValues($statement, $this->prepareBindings($bindings));
-
-            $statement->execute();
-
-            $sets = [];
-
-            do {
-                $sets[] = $statement->fetchAll();
-            } while ($statement->nextRowset());
-
-            return $sets;
         });
     }
 
@@ -793,7 +758,7 @@ class Connection implements ConnectionInterface
         // lot more helpful to the developer instead of just the database's errors.
         catch (Exception $e) {
             throw new QueryException(
-                $this->getName(), $query, $this->prepareBindings($bindings), $e
+                $query, $this->prepareBindings($bindings), $e
             );
         }
     }
@@ -960,7 +925,7 @@ class Connection implements ConnectionInterface
      *
      * @return void
      */
-    public function reconnectIfMissingConnection()
+    protected function reconnectIfMissingConnection()
     {
         if (is_null($this->pdo)) {
             $this->reconnect();
@@ -1035,74 +1000,11 @@ class Connection implements ConnectionInterface
      * Get a new raw query expression.
      *
      * @param  mixed  $value
-     * @return \Illuminate\Contracts\Database\Query\Expression
+     * @return \Illuminate\Database\Query\Expression
      */
     public function raw($value)
     {
         return new Expression($value);
-    }
-
-    /**
-     * Escape a value for safe SQL embedding.
-     *
-     * @param  string|float|int|bool|null  $value
-     * @param  bool  $binary
-     * @return string
-     */
-    public function escape($value, $binary = false)
-    {
-        if ($value === null) {
-            return 'null';
-        } elseif ($binary) {
-            return $this->escapeBinary($value);
-        } elseif (is_int($value) || is_float($value)) {
-            return (string) $value;
-        } elseif (is_bool($value)) {
-            return $this->escapeBool($value);
-        } else {
-            if (str_contains($value, "\00")) {
-                throw new RuntimeException('Strings with null bytes cannot be escaped. Use the binary escape option.');
-            }
-
-            if (preg_match('//u', $value) === false) {
-                throw new RuntimeException('Strings with invalid UTF-8 byte sequences cannot be escaped.');
-            }
-
-            return $this->escapeString($value);
-        }
-    }
-
-    /**
-     * Escape a string value for safe SQL embedding.
-     *
-     * @param  string  $value
-     * @return string
-     */
-    protected function escapeString($value)
-    {
-        return $this->getPdo()->quote($value);
-    }
-
-    /**
-     * Escape a boolean value for safe SQL embedding.
-     *
-     * @param  bool  $value
-     * @return string
-     */
-    protected function escapeBool($value)
-    {
-        return $value ? '1' : '0';
-    }
-
-    /**
-     * Escape a binary value for safe SQL embedding.
-     *
-     * @param  string  $value
-     * @return string
-     */
-    protected function escapeBinary($value)
-    {
-        throw new RuntimeException('The database connection does not support escaping binary values.');
     }
 
     /**
@@ -1175,7 +1077,7 @@ class Connection implements ConnectionInterface
     }
 
     /**
-     * Indicates whether native alter operations will be used when dropping, renaming, or modifying columns, even if Doctrine DBAL is installed.
+     * Indicates whether native alter operations will be used when dropping or renaming columns, even if Doctrine DBAL is installed.
      *
      * @return bool
      */
@@ -1195,7 +1097,7 @@ class Connection implements ConnectionInterface
     {
         $schema = $this->getDoctrineSchemaManager();
 
-        return $schema->introspectTable($table)->getColumn($column);
+        return $schema->listTableDetails($table)->getColumn($column);
     }
 
     /**
@@ -1207,7 +1109,11 @@ class Connection implements ConnectionInterface
     {
         $connection = $this->getDoctrineConnection();
 
-        return $connection->createSchemaManager();
+        // Doctrine v2 expects one parameter while v3 expects two. 2nd will be ignored on v2...
+        return $this->getDoctrineDriver()->getSchemaManager(
+            $connection,
+            $connection->getDatabasePlatform()
+        );
     }
 
     /**
@@ -1245,7 +1151,7 @@ class Connection implements ConnectionInterface
      * @param  string  $type
      * @return void
      *
-     * @throws \Doctrine\DBAL\Exception
+     * @throws \Doctrine\DBAL\DBALException
      * @throws \RuntimeException
      */
     public function registerDoctrineType(Type|string $class, string $name, string $type): void

@@ -98,11 +98,8 @@ abstract class HasOneOrMany extends Relation
     {
         $whereIn = $this->whereInMethod($this->parent, $this->localKey);
 
-        $this->whereInEager(
-            $whereIn,
-            $this->foreignKey,
-            $this->getKeys($models, $this->localKey),
-            $this->getRelationQuery()
+        $this->getRelationQuery()->{$whereIn}(
+            $this->foreignKey, $this->getKeys($models, $this->localKey)
         );
     }
 
@@ -348,17 +345,6 @@ abstract class HasOneOrMany extends Relation
         $attributes[$this->getForeignKeyName()] = $this->getParentKey();
 
         return $this->related->forceCreate($attributes);
-    }
-
-    /**
-     * Create a new instance of the related model with mass assignment without raising model events.
-     *
-     * @param  array  $attributes
-     * @return \Illuminate\Database\Eloquent\Model
-     */
-    public function forceCreateQuietly(array $attributes = [])
-    {
-        return Model::withoutEvents(fn () => $this->forceCreate($attributes));
     }
 
     /**

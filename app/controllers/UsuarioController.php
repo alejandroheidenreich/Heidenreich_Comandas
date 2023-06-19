@@ -1,7 +1,7 @@
 <?php
 require_once './models/Usuario.php';
 require_once './interfaces/IApiUse.php';
-require_once './middlewares/Roles.php';
+//require_once './middlewares/Roles.php';
 
 class UsuarioController extends Usuario implements IApiUse
 {
@@ -9,15 +9,9 @@ class UsuarioController extends Usuario implements IApiUse
   {
     $parametros = $request->getParsedBody();
 
-    $token = $parametros['token'];
+    
 
-    $usuarioAutorizado = Roles::ValidarSoloUnRole("socio", $token);
-
-    if ($usuarioAutorizado != null) {
-
-      $usuario = $parametros['usuario'];
-      $clave = $parametros['clave'];
-      $rol = $parametros['rol'];
+    
 
       if (Usuario::ValidarRol($rol) && Usuario::ValidarUserName($usuario) == null) {
         $payload = json_encode(array("error" => "Creacion de usuario fallida"));
@@ -30,9 +24,9 @@ class UsuarioController extends Usuario implements IApiUse
         Usuario::crear($user);
         $payload = json_encode(array("mensaje" => "Usuario creado con exito"));
       }
-    } else {
-      $payload = json_encode(array("mensaje" => "No tienes permisos para realizar esta accion", "usuario" => $usuarioAutorizado));
-    }
+    // } else {
+    //   $payload = json_encode(array("mensaje" => "No tienes permisos para realizar esta accion", "usuario" => $usuarioAutorizado));
+    // }
 
     $response->getBody()->write($payload);
     return $response

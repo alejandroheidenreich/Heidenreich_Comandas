@@ -471,7 +471,7 @@ abstract class Factory
         return collect($definition)
             ->map($evaluateRelations = function ($attribute) {
                 if ($attribute instanceof self) {
-                    $attribute = $this->getRandomRecycledModel($attribute->modelName())?->getKey()
+                    $attribute = $this->getRandomRecycledModel($attribute->modelName())
                         ?? $attribute->recycle($this->recycle)->create()->getKey();
                 } elseif ($attribute instanceof Model) {
                     $attribute = $attribute->getKey();
@@ -874,7 +874,7 @@ abstract class Factory
             return Container::getInstance()
                             ->make(Application::class)
                             ->getNamespace();
-        } catch (Throwable) {
+        } catch (Throwable $e) {
             return 'App\\';
         }
     }
