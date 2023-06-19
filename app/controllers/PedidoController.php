@@ -1,6 +1,9 @@
 <?php
 require_once './models/Pedido.php';
-require_once './models/Factura.php';
+require_once './models/Mesa.php';
+require_once './models/Producto.php';
+require_once './models/Estado.php';
+require_once './models/GeneradorCodigo.php';
 require_once './interfaces/IApiUse.php';
 
 class PedidoController extends Pedido implements IApiUse
@@ -14,30 +17,26 @@ class PedidoController extends Pedido implements IApiUse
     $idProducto = $parametros['idProducto'];
     $nombreCliente = $parametros['nombreCliente'];
 
-    if (isset($parametros['idFactura'])) {
-      $idFactura = $parametros['idFactura'];
-    } else {
-
-      $factura = new Factura();
-      // TODO: como manejar img con slim
-      $fotoMesa = $request->getUploadedFiles();
-      if (is_uploaded_file($parametros['fotoMesa'])) {
-        $fechaHoy = new DateTime();
-        $fecha = date_format($fechaHoy, 'Y-m-d H:i:s');
-        $factura->GuardarImagen($parametros['fotoMesa']['tmp_name'], "{$nombreCliente}_{$fecha}");
-      }
-      $idFactura = Factura::crear($factura);
-    }
-
+   
     $pedido = new Pedido();
     $pedido->idMesa = $idMesa;
+    
     $pedido->idProducto = $idProducto;
     $pedido->nombreCliente = $nombreCliente;
-    $pedido->idFactura = intval($idFactura);
+    
+    $mesa = Mesa::obtenerUno($idMesa);
+
+    if ($mesa->estado == Estado::CERRADA) {
+      $pedido->codigoPedido = GenerarCodigo(5);
+      $mesa->estado = Estado::ESPERANDO;
+      Mesa::modificar($mesa);
+    } else {
+      $pedido->codigoPedido = Pedido::obtenerUltimoCodigo($idMesa);
+    }
 
     Pedido::crear($pedido);
 
-    $payload = json_encode(array("mensaje" => $idFactura));
+    $payload = json_encode(array("mensaje" => "Pedido creado con exito"));
 
     $response->getBody()->write($payload);
     return $response
@@ -61,6 +60,27 @@ class PedidoController extends Pedido implements IApiUse
   {
     $lista = Pedido::obtenerTodos();
     $payload = json_encode(array("listaPedidos" => $lista));
+
+    $response->getBody()->write($payload);
+    return $response
+      ->withHeader('Content-Type', 'application/json');
+  }
+
+  public static function TraerPendientes($request, $response, $args)
+  {
+    $listaPendientes = Pedido::obtenerPendientes();
+    $lista = [];
+    $parametros = $request->getQueryParams();
+        
+    $token = $parametros['token'];
+    $data = AutentificadorJWT::ObtenerData($token);
+    foreach ($listaPendientes as $pedido) {
+      
+      if((Producto::obtenerUno($pedido->idProducto))->tipo == $data->rol ){
+        $lista[] = $pedido;
+      }
+    }
+    $payload = json_encode(array("listaPedidosPendientes" => $lista));
 
     $response->getBody()->write($payload);
     return $response

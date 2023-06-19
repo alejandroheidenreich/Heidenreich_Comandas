@@ -59,7 +59,7 @@ class Producto implements IPersistencia
     public static function obtenerUno($valor)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, descripcion, tipo, precio FROM producto WHERE :propiedad = :valor");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, descripcion, tipo, precio FROM productos WHERE id = :valor");
         //$consulta->bindValue(':propiedad', $propiedad, PDO::PARAM_STR);
         $consulta->bindValue(':valor', $valor, PDO::PARAM_STR);
         $consulta->execute();

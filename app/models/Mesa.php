@@ -1,6 +1,6 @@
 <?php
 
-//require_once './models/Estado.php';
+require_once './models/Estado.php';
 require_once './models/GeneradorCodigo.php';
 
 class Mesa implements IPersistencia
@@ -35,7 +35,7 @@ class Mesa implements IPersistencia
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO mesas (codigoMesa, estado) VALUES (:codigoMesa, :estado)");
         $consulta->bindValue(':codigoMesa', $codigo, PDO::PARAM_STR);
-        $consulta->bindValue(':estado', $mesa->estado, PDO::PARAM_STR);
+        $consulta->bindValue(':estado', Estado::CERRADA, PDO::PARAM_STR);
         $consulta->execute();
 
         return $objAccesoDatos->obtenerUltimoId();
@@ -53,8 +53,7 @@ class Mesa implements IPersistencia
     public static function obtenerUno($valor)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, codigoMesa, estado FROM mesas WHERE :propiedad = :valor");
-        //$consulta->bindValue(':propiedad', $propiedad, PDO::PARAM_STR);
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, codigoMesa, estado FROM mesas WHERE id = :valor");
         $consulta->bindValue(':valor', $valor, PDO::PARAM_STR);
         $consulta->execute();
 
@@ -65,9 +64,10 @@ class Mesa implements IPersistencia
     {
         $objAccesoDato = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDato->prepararConsulta("UPDATE mesas SET estado = :estado WHERE id = :id");
+        $consulta->bindValue(':id', $mesa->id, PDO::PARAM_INT);
         $consulta->bindValue(':estado', $mesa->estado, PDO::PARAM_STR);
-        $consulta->bindValue(':id', $mesa->id, PDO::PARAM_STR);
         $consulta->execute();
+
     }
 
     public static function borrar($mesa)

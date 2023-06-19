@@ -7,15 +7,9 @@ class MesaController extends Mesa implements IApiUse
   public static function CargarUno($request, $response, $args)
   {
     $parametros = $request->getParsedBody();
-
-    $estado = $parametros['estado'];
-
     $mesa = new Mesa();
 
-    $mesa->estado = $estado;
-
     Mesa::crear($mesa);
-
 
     $payload = json_encode(array("mensaje" => "Mesa creada con exito"));
 

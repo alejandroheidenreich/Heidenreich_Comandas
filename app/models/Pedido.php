@@ -1,7 +1,7 @@
 <?php
 
 require_once './models/Estado.php';
-require_once './models/GeneradorCodigo.php';
+
 
 class Pedido implements IPersistencia
 {
@@ -9,7 +9,6 @@ class Pedido implements IPersistencia
     public $codigoPedido; // 5 caracteres
     public $idMesa;
     public $idProducto;
-    public $idFactura;
     public $nombreCliente;
     public $estado;
     public $tiempoEstimado;
@@ -40,10 +39,10 @@ class Pedido implements IPersistencia
     public static function crear($pedido)
     {
         //TODO: agregar id factura
-        $codigo = GenerarCodigo(5);
+        //$codigo = GenerarCodigo(5);
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedidos (codigoPedido, idMesa, idProducto, idFactura, nombreCliente, estado) VALUES (:codigoPedido, :idMesa, :idProducto, :idFactura, :nombreCliente, :estado)");
-        $consulta->bindValue(':codigoPedido', $codigo, PDO::PARAM_STR);
+        $consulta = $objAccesoDatos->prepararConsulta("INSERT INTO pedidos (codigoPedido, idMesa, idProducto, nombreCliente, estado) VALUES (:codigoPedido, :idMesa, :idProducto, :nombreCliente, :estado)");
+        $consulta->bindValue(':codigoPedido', $pedido->codigoPedido, PDO::PARAM_STR);
         $consulta->bindValue(':idMesa', $pedido->idMesa, PDO::PARAM_INT);
         $consulta->bindValue(':idProducto', $pedido->idProducto, PDO::PARAM_INT);
         $consulta->bindValue(':nombreCliente', $pedido->nombreCliente, PDO::PARAM_STR);
@@ -56,7 +55,7 @@ class Pedido implements IPersistencia
     public static function obtenerTodos()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, codigoPedido, idMesa, idProducto, idFactura, nombreCliente, estado, tiempoEstimado, tiempoInicio, tiempoFinal, fechaBaja FROM pedidos");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, codigoPedido, idMesa, idProducto, nombreCliente, estado, tiempoEstimado, tiempoInicio, tiempoEntregado, fechaBaja FROM pedidos");
 
         $consulta->execute();
 
@@ -66,7 +65,7 @@ class Pedido implements IPersistencia
     public static function obtenerUno($valor)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, codigoPedido, idMesa, idProducto, idFactura, nombreCliente, estado, tiempoEstimado, tiempoInicio, tiempoFinal, fechaBaja FROM pedidos WHERE :propiedad = :valor");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, codigoPedido, idMesa, idProducto, nombreCliente, estado, tiempoEstimado, tiempoInicio, tiempoEntregado, fechaBaja FROM pedidos WHERE id = :valor");
         //$consulta->bindValue(':propiedad', $propiedad, PDO::PARAM_STR);
         $consulta->bindValue(':valor', $valor, PDO::PARAM_STR);
         $consulta->execute();
@@ -74,14 +73,34 @@ class Pedido implements IPersistencia
         return $consulta->fetchObject('Pedido');
     }
 
+    public static function obtenerPendientes()
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, codigoPedido, idMesa, idProducto, nombreCliente, estado, tiempoEstimado, tiempoInicio, tiempoEntregado, fechaBaja FROM pedidos WHERE estado = :valor");
+        //$consulta->bindValue(':propiedad', $propiedad, PDO::PARAM_STR);
+        $consulta->bindValue(':valor', Estado::PENDIENTE, PDO::PARAM_STR);
+        $consulta->execute();
+
+        return $consulta->fetchAll(PDO::FETCH_CLASS, 'Pedido');
+    }
+
     public static function modificar($pedido)
     {
+    
         $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos SET SET idMesa = :idMesa, puntaje = :puntaje, encuesta = :encuesta WHERE numeroPedido = :numeroPedido");
-        $consulta->bindValue(':idMesa', $pedido->mesa->id, PDO::PARAM_STR);
-        $consulta->bindValue(':encuesta', $pedido->encuesta, PDO::PARAM_STR);
-        $consulta->bindValue(':puntaje', $pedido->puntaje, PDO::PARAM_STR);
-        $consulta->bindValue(':numeroPedido', $pedido->numeroPedido, PDO::PARAM_STR);
+        $consulta = $objAccesoDato->prepararConsulta("UPDATE pedidos SET codigoPedido = :codigoPedido, idMesa = :idMesa, idProducto = :idProducto, nombreCliente = :nombreCliente, estado = :estado, tiempoEstimado = :tiempoEstimado, tiempoInicio = :tiempoInicio, tiempoEntregado = :tiempoEntregado, fechaBaja = :fechaBaja WHERE id = :id");
+        $consulta->bindValue(':codigoPedido', $pedido->codigoPedido, PDO::PARAM_STR);
+        $consulta->bindValue(':idMesa', $pedido->idMesa, PDO::PARAM_STR);
+        $consulta->bindValue(':idProducto', $pedido->idProducto, PDO::PARAM_STR);
+        $consulta->bindValue(':nombreCliente', $pedido->nombreCliente, PDO::PARAM_STR);
+        $consulta->bindValue(':estado', $pedido->estado, PDO::PARAM_STR);
+        $consulta->bindValue(':tiempoEstimado', $pedido->tiempoEstimado, PDO::PARAM_STR);
+        $consulta->bindValue(':tiempoInicio', $pedido->tiempoInicio, PDO::PARAM_STR);
+        $consulta->bindValue(':tiempoEntregado', $pedido->tiempoEntregado, PDO::PARAM_STR);
+        $consulta->bindValue(':fechaBaja', $pedido->fechaBaja, PDO::PARAM_STR);
+        // $consulta->bindValue(':encuesta', $pedido->encuesta, PDO::PARAM_STR);
+        // $consulta->bindValue(':puntaje', $pedido->puntaje, PDO::PARAM_STR);
+        $consulta->bindValue(':id', $pedido->id, PDO::PARAM_STR);
         $consulta->execute();
     }
 
@@ -95,5 +114,13 @@ class Pedido implements IPersistencia
         $consulta->execute();
     }
 
+    public static function obtenerUltimoCodigo($idMesa){
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT codigoPedido FROM pedidos WHERE idMesa = :idMesa");
+        $consulta->bindValue(':idMesa', $idMesa, PDO::PARAM_STR);
+        $consulta->execute();
+
+        return $consulta->fetchColumn();
+    }
 
 }

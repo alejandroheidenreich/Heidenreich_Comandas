@@ -9,11 +9,10 @@ class UsuarioController extends Usuario implements IApiUse
   {
     $parametros = $request->getParsedBody();
 
-    
-
-    
-
-      if (Usuario::ValidarRol($rol) && Usuario::ValidarUserName($usuario) == null) {
+    $usuario = $parametros['usuario'];
+    $rol = $parametros['rol'];
+    $clave = $parametros['clave'];
+      if (!Usuario::ValidarRol($rol) && Usuario::ValidarUserName($usuario) == null) {
         $payload = json_encode(array("error" => "Creacion de usuario fallida"));
       } else {
         $user = new Usuario();
@@ -56,17 +55,11 @@ class UsuarioController extends Usuario implements IApiUse
 
   public static function TraerTodos($request, $response, $args)
   {
-    $parametros = $request->getParsedBody();
-    $token = $parametros['token'];
-
-    $usuarioAutorizado = Roles::ValidarSoloUnRole("socio", $token);
-
-    if ($usuarioAutorizado != null) {
+    
+    
       $lista = Usuario::obtenerTodos();
       $payload = json_encode(array("listaUsuario" => $lista));
-    } else {
-      $payload = json_encode(array("mensaje" => "No tienes permisos para realizar esta accion", "usuario" => $usuarioAutorizado));
-    }
+    
 
     $response->getBody()->write($payload);
     return $response
@@ -75,26 +68,17 @@ class UsuarioController extends Usuario implements IApiUse
 
   public static function ModificarUno($request, $response, $args)
   {
-    $parametros = $request->getParsedBody();
+    
+    $nombre = $parametros['nombre'];
+    $usuario = Usuario::obtenerUno($nombre);
 
-    $token = $parametros['token'];
-
-    $usuarioAutorizado = Roles::ValidarSoloUnRole("socio", $token);
-
-    if ($usuarioAutorizado != null) {
-      $nombre = $parametros['nombre'];
-      $usuario = Usuario::obtenerUno($nombre);
-
-      if ($usuario != null) {
-        Usuario::modificar($usuario);
-        $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
-      } else {
-        $payload = json_encode(array("error" => "Usuario no existe"));
-      }
+    if ($usuario != null) {
+      Usuario::modificar($usuario);
+      $payload = json_encode(array("mensaje" => "Usuario modificado con exito"));
     } else {
-      $payload = json_encode(array("mensaje" => "No tienes permisos para realizar esta accion", "usuario" => $usuarioAutorizado));
+      $payload = json_encode(array("error" => "Usuario no existe"));
     }
-
+  
     $response->getBody()->write($payload);
     return $response
       ->withHeader('Content-Type', 'application/json');
@@ -102,22 +86,12 @@ class UsuarioController extends Usuario implements IApiUse
 
   public static function BorrarUno($request, $response, $args)
   {
-    $parametros = $request->getParsedBody();
+    
+    $usuarioId = $parametros['usuarioId'];
+    Usuario::borrar($usuarioId);
 
-    $token = $parametros['token'];
-
-    $usuarioAutorizado = Roles::ValidarSoloUnRole("socio", $token);
-
-    if ($usuarioAutorizado != null) {
-
-      $usuarioId = $parametros['usuarioId'];
-      Usuario::borrar($usuarioId);
-
-      $payload = json_encode(array("mensaje" => "Usuario borrado con exito"));
-    } else {
-      $payload = json_encode(array("mensaje" => "No tienes permisos para realizar esta accion", "usuario" => $usuarioAutorizado));
-    }
-
+    $payload = json_encode(array("mensaje" => "Usuario borrado con exito"));
+     
     $response->getBody()->write($payload);
     return $response
       ->withHeader('Content-Type', 'application/json');
@@ -133,12 +107,14 @@ class UsuarioController extends Usuario implements IApiUse
 
     if ($usuario != null) {
       if (password_verify($clave, $usuario->clave)) {
-        $data = array('usuario' => $usuario->usuario, 'clave' => $usuario->clave);
+        $data = array('usuario' => $usuario->usuario, 'rol' => $usuario->rol, 'clave' => $usuario->clave);
         $creacion = AutentificadorJWT::CrearToken($data);
         $usuario->token = $creacion['jwt'];
-        $usuario->expToken = $creacion['token']['exp'];
+        $usuario->expiracionToken = $creacion['token']['exp'];
 
         Usuario::modificar($usuario);
+
+      
         $payload = json_encode(array("mensaje" => "Usuario logeado", "token" => $usuario->token));
       } else {
         $payload = json_encode(array("mensaje" => "Usuario invalido", "Error" => "Clave invalida"));
