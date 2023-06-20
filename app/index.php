@@ -22,6 +22,7 @@ require_once './controllers/ProductoController.php';
 require_once './controllers/MesaController.php';
 require_once './controllers/PedidoController.php';
 date_default_timezone_set('America/Argentina/Buenos_Aires');
+
 // Load ENV
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->safeLoad();
@@ -98,7 +99,7 @@ $app->group('/admin', function (RouteCollectorProxy $group) {
     $user->rol = "socio";
 
     Usuario::crear($user);
-    $payload = json_encode(array("mensaje" => "Usuario creado con exito"));
+    $payload = json_encode(array("mensaje" => "Admin creado con exito"));
 
     $response->getBody()->write($payload);
     return $response

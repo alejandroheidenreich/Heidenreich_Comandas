@@ -50,7 +50,7 @@ class MesaController extends Mesa implements IApiUse
 
     $mesa = Mesa::obtenerUno($id);
 
-    if ($mesa != null) {
+    if ($mesa != false) {
       $parametros = $request->getParsedBody();
 
       $actualizado = false;

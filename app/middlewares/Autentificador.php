@@ -9,8 +9,6 @@ class Autentificador
     public static function ValidarSocio($request, $handler)
     {
         $cookies = $request->getCookieParams();
-
-
         $token = $cookies['token'];
 
         AutentificadorJWT::VerificarToken($token);

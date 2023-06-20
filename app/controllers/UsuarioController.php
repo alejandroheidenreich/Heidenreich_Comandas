@@ -66,7 +66,7 @@ class UsuarioController extends Usuario implements IApiUse
 
     $usuario = Usuario::obtenerUnoPorID($id);
 
-    if ($usuario != null) {
+    if ($usuario != false) {
       $parametros = $request->getParsedBody();
 
       $actualizado = false;
@@ -127,7 +127,7 @@ class UsuarioController extends Usuario implements IApiUse
     $usuario = Usuario::obtenerUno($user);
 
 
-    if ($usuario != null) {
+    if ($usuario != false) {
 
       if (password_verify($clave, $usuario->clave)) {
         $data = array('usuario' => $usuario->usuario, 'rol' => $usuario->rol, 'clave' => $usuario->clave);

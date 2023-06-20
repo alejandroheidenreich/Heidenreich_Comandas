@@ -56,7 +56,7 @@ class ProductoController extends Producto implements IApiUse
 
     $producto = Producto::obtenerUno($id);
 
-    if ($producto != null) {
+    if ($producto != false) {
       $parametros = $request->getParsedBody();
 
       $actualizado = false;
