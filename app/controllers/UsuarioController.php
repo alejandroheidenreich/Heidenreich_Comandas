@@ -11,22 +11,17 @@ class UsuarioController extends Usuario implements IApiUse
   public static function CargarUno($request, $response, $args)
   {
     $parametros = $request->getParsedBody();
-
     $usuario = $parametros['usuario'];
     $rol = $parametros['rol'];
     $clave = $parametros['clave'];
-    if (!Usuario::ValidarRol($rol) && Usuario::ValidarUserName($usuario) == null) {
-      $payload = json_encode(array("error" => "Creacion de usuario fallida"));
-    } else {
-      $user = new Usuario();
-      $user->usuario = $usuario;
-      $user->clave = $clave;
-      $user->rol = $rol;
 
-      Usuario::crear($user);
-      $payload = json_encode(array("mensaje" => "Usuario creado con exito"));
-    }
+    $user = new Usuario();
+    $user->usuario = $usuario;
+    $user->clave = $clave;
+    $user->rol = $rol;
 
+    Usuario::crear($user);
+    $payload = json_encode(array("mensaje" => "Usuario creado con exito"));
 
     $response->getBody()->write($payload);
     return $response
@@ -122,30 +117,16 @@ class UsuarioController extends Usuario implements IApiUse
   {
     $parametros = $request->getParsedBody();
     $user = $parametros['usuario'];
-    $clave = $parametros['clave'];
+    //$clave = $parametros['clave'];
 
     $usuario = Usuario::obtenerUno($user);
 
+    $data = array('usuario' => $usuario->usuario, 'rol' => $usuario->rol, 'clave' => $usuario->clave);
+    $creacion = AutentificadorJWT::CrearToken($data);
 
-    if ($usuario != false) {
+    $response = $response->withHeader('Set-Cookie', 'token=' . $creacion['jwt']);
 
-      if (password_verify($clave, $usuario->clave)) {
-        $data = array('usuario' => $usuario->usuario, 'rol' => $usuario->rol, 'clave' => $usuario->clave);
-        $creacion = AutentificadorJWT::CrearToken($data);
-        $usuario->token = $creacion['jwt'];
-        $usuario->expiracionToken = $creacion['token']['exp'];
-        Usuario::modificar($usuario);
-
-        $response = $response->withHeader('Set-Cookie', 'token=' . $usuario->token);
-
-        $payload = json_encode(array("mensaje" => "Usuario logeado, cookie entregada", "token" => $usuario->token));
-      } else {
-        $payload = json_encode(array("mensaje" => "Usuario invalido", "Error" => "Clave invalida"));
-      }
-
-    } else {
-      $payload = json_encode(array("mensaje" => "Usuario invalido", "Error" => "Usuario no existe"));
-    }
+    $payload = json_encode(array("mensaje" => "Usuario logeado, cookie entregada", "token" => $creacion['jwt']));
 
     $response->getBody()->write($payload);
     return $response

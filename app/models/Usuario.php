@@ -60,7 +60,7 @@ class Usuario implements IPersistencia
     public static function obtenerTodos()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, usuario, clave, rol, token, expiracionToken FROM usuarios");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, usuario, clave, rol FROM usuarios");
         $consulta->execute();
 
         return $consulta->fetchAll(PDO::FETCH_CLASS, 'Usuario');
@@ -69,7 +69,7 @@ class Usuario implements IPersistencia
     public static function obtenerUno($usuario)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, usuario, clave, rol, token, expiracionToken FROM usuarios WHERE usuario = :usuario");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, usuario, clave, rol FROM usuarios WHERE usuario = :usuario");
         $consulta->bindValue(':usuario', $usuario, PDO::PARAM_STR);
         $consulta->execute();
 
@@ -79,7 +79,7 @@ class Usuario implements IPersistencia
     public static function obtenerUnoPorID($id)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, usuario, clave, rol, token, expiracionToken FROM usuarios WHERE id = :id AND fechaBaja IS NULL");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, usuario, clave, rol FROM usuarios WHERE id = :id AND fechaBaja IS NULL");
         $consulta->bindValue(':id', $id, PDO::PARAM_STR);
         $consulta->execute();
 
@@ -89,13 +89,11 @@ class Usuario implements IPersistencia
     public static function modificar($usuario)
     {
         $objAccesoDato = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDato->prepararConsulta("UPDATE usuarios SET usuario = :usuario, clave = :clave, rol = :rol, token = :token, expiracionToken = :expiracionToken WHERE id = :id AND fechaBaja IS NULL");
+        $consulta = $objAccesoDato->prepararConsulta("UPDATE usuarios SET usuario = :usuario, clave = :clave, rol = :rol WHERE id = :id AND fechaBaja IS NULL");
 
         $consulta->bindValue(':usuario', $usuario->usuario, PDO::PARAM_STR);
         $consulta->bindValue(':clave', $usuario->clave, PDO::PARAM_STR);
         $consulta->bindValue(':rol', $usuario->rol, PDO::PARAM_STR);
-        $consulta->bindValue(':token', $usuario->token, PDO::PARAM_STR);
-        $consulta->bindValue(':expiracionToken', $usuario->expiracionToken, PDO::PARAM_STR);
         $consulta->bindValue(':id', $usuario->id, PDO::PARAM_INT);
         $consulta->execute();
     }
@@ -112,7 +110,6 @@ class Usuario implements IPersistencia
 
     public static function ValidarRol($rol)
     {
-
         if ($rol != Rol::SOCIO && $rol != Rol::BARTENDER && $rol != Rol::CERVECERO && $rol != Rol::COCINERO && $rol != Rol::MOZO && $rol != Rol::CANDYBAR) {
             return false;
         }
@@ -129,24 +126,6 @@ class Usuario implements IPersistencia
             }
         }
         return null;
-    }
-
-    public static function BuscarPorToken($token)
-    {
-        $usuarios = Usuario::obtenerTodos();
-
-        foreach ($usuarios as $user) {
-
-            if ($user->token == $token) {
-                return $user;
-            }
-        }
-        return null;
-    }
-
-    public static function ValidarExpiracionToken($usuario)
-    {
-        return $usuario->expiracionToken >= time();
     }
 
 }

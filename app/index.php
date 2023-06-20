@@ -16,6 +16,8 @@ require __DIR__ . '/../vendor/autoload.php';
 require_once './db/AccesoDatos.php';
 require_once './middlewares/AutentificadorJWT.php';
 require_once './middlewares/Autentificador.php';
+require_once './middlewares/Validador.php';
+require_once './middlewares/Logger.php';
 
 require_once './controllers/UsuarioController.php';
 require_once './controllers/ProductoController.php';
@@ -52,7 +54,7 @@ $app->addBodyParsingMiddleware();
 $app->group('/usuarios', function (RouteCollectorProxy $group) {
   $group->get('[/]', \UsuarioController::class . '::TraerTodos')->add(\Autentificador::class . '::ValidarSocio');
   $group->get('/{usuario}', \UsuarioController::class . '::TraerUno')->add(\Autentificador::class . '::ValidarSocio');
-  $group->post('[/]', \UsuarioController::class . '::CargarUno')->add(\Autentificador::class . '::ValidarSocio');
+  $group->post('[/]', \UsuarioController::class . '::CargarUno')->add(\Autentificador::class . '::ValidarSocio')->add(\Validador::class . '::ValidarNuevoUsuario');
   $group->put('/{id}', \UsuarioController::class . '::ModificarUno')->add(\Autentificador::class . '::ValidarSocio');
   $group->delete('/{id}', \UsuarioController::class . '::BorrarUno')->add(\Autentificador::class . '::ValidarSocio');
 });
@@ -85,9 +87,9 @@ $app->group('/pedidos', function (RouteCollectorProxy $group) {
 
 
 
-// LOG IN
+// LOG IN 
 $app->group('/login', function (RouteCollectorProxy $group) {
-  $group->post('[/]', \UsuarioController::class . '::LogIn');
+  $group->post('[/]', \UsuarioController::class . '::LogIn')->add(\Logger::class . '::ValidarLogin');
 });
 
 // ADMIN
