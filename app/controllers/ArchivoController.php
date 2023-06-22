@@ -35,8 +35,9 @@ class ArchivoController
 
       $targetPath = './archivos_cargados/' . $csvFile->getClientFilename();
 
+      $csvFile->moveTo($targetPath);
 
-      $payload = json_encode(array("mensaje" => "Archivo cargado"));
+      $payload = json_encode(array("mensaje" => "Archivo cargado con exito"));
 
       $response->getBody()->write($payload);
       return $response

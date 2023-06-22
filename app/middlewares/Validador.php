@@ -26,6 +26,10 @@ class Validador
 
         if (isset($uploadedFiles['csv'])) {
           
+            if (preg_match('/\.csv$/i', $uploadedFiles['csv']->getClientFilename()) == 0){
+                throw new Exception("Debe ser un archivo CSV");
+            }
+            
             return $handler->handle($request);
         }
 
