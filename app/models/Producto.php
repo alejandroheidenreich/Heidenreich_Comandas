@@ -87,4 +87,9 @@ class Producto implements IPersistencia
         $consulta->bindValue(':fechaBaja', date_format($fecha, 'Y-m-d H:i:s'));
         $consulta->execute();
     }
+
+    public static function leerCSV($ruta){
+
+        
+    }
 }

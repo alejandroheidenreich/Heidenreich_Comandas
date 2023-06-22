@@ -23,6 +23,8 @@ require_once './controllers/UsuarioController.php';
 require_once './controllers/ProductoController.php';
 require_once './controllers/MesaController.php';
 require_once './controllers/PedidoController.php';
+require_once './controllers/ArchivoController.php';
+
 date_default_timezone_set('America/Argentina/Buenos_Aires');
 
 // Load ENV
@@ -108,6 +110,13 @@ $app->group('/admin', function (RouteCollectorProxy $group) {
       ->withHeader('Content-Type', 'application/json');
   });
 });
+
+$app->group('/csv', function (RouteCollectorProxy $group) {
+  $group->post('[/load]', \ArchivoController::class . '::Cargar')->add(\Validador::class . '::VerificarArchivo');
+  $group->get('[/download]', \ArchivoController::class . '::Descargar');
+});
+
+
 
 // JWT test routes
 $app->group('/jwt', function (RouteCollectorProxy $group) {
