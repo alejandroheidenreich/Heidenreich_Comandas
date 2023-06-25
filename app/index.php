@@ -23,7 +23,6 @@ require_once './controllers/UsuarioController.php';
 require_once './controllers/ProductoController.php';
 require_once './controllers/MesaController.php';
 require_once './controllers/PedidoController.php';
-require_once './controllers/ArchivoController.php';
 
 date_default_timezone_set('America/Argentina/Buenos_Aires');
 
@@ -51,7 +50,6 @@ $app->addErrorMiddleware(true, true, true)
 $app->addBodyParsingMiddleware();
 
 
-
 // ABM Routes
 $app->group('/usuarios', function (RouteCollectorProxy $group) {
   $group->get('[/]', \UsuarioController::class . '::TraerTodos')->add(\Autentificador::class . '::ValidarSocio');
@@ -67,6 +65,8 @@ $app->group('/productos', function (RouteCollectorProxy $group) {
   $group->post('[/]', \ProductoController::class . '::CargarUno')->add(\Autentificador::class . '::ValidarSocio');
   $group->put('/{id}', \ProductoController::class . '::ModificarUno')->add(\Autentificador::class . '::ValidarSocio');
   $group->delete('/{id}', \ProductoController::class . '::BorrarUno')->add(\Autentificador::class . '::ValidarSocio');
+  $group->post('/load', \ProductoController::class . '::Cargar')->add(\Validador::class . '::VerificarArchivo');
+  $group->get('/download', \ProductoController::class . '::Descargar')->add(\Autentificador::class . '::ValidarSocio');
 });
 
 $app->group('/mesas', function (RouteCollectorProxy $group) {
@@ -86,7 +86,6 @@ $app->group('/pedidos', function (RouteCollectorProxy $group) {
   $group->get('/consulta', \PedidoController::class . '::TraerUno')->add(\Autentificador::class . '::ValidarMozo');
   $group->post('[/]', \PedidoController::class . '::CargarUno')->add(\Autentificador::class . '::ValidarMozo');
 });
-
 
 
 // LOG IN 
@@ -112,82 +111,8 @@ $app->group('/admin', function (RouteCollectorProxy $group) {
 });
 
 $app->group('/csv', function (RouteCollectorProxy $group) {
-  $group->post('[/load]', \ArchivoController::class . '::Cargar')->add(\Validador::class . '::VerificarArchivo');
-  $group->get('[/download]', \ArchivoController::class . '::Descargar');
-});
 
-
-
-// JWT test routes
-$app->group('/jwt', function (RouteCollectorProxy $group) {
-
-  $group->post('/crearToken', function (Request $request, Response $response) {
-    $parametros = $request->getParsedBody();
-
-    $usuario = $parametros['usuario'];
-    $perfil = $parametros['perfil'];
-    $rol = $parametros['rol'];
-
-    $datos = array('usuario' => $usuario, 'perfil' => $perfil, 'rol' => $rol);
-
-    $token = AutentificadorJWT::CrearToken($datos);
-    $payload = json_encode(array('jwt' => $token));
-
-    $response->getBody()->write($payload);
-    return $response
-      ->withHeader('Content-Type', 'application/json');
-  });
-
-  $group->get('/devolverPayLoad', function (Request $request, Response $response) {
-    $header = $request->getHeaderLine('Authorization');
-    $token = trim(explode("Bearer", $header)[1]);
-
-    try {
-      $payload = json_encode(array('payload' => AutentificadorJWT::ObtenerPayLoad($token)));
-    } catch (Exception $e) {
-      $payload = json_encode(array('error' => $e->getMessage()));
-    }
-
-    $response->getBody()->write($payload);
-    return $response
-      ->withHeader('Content-Type', 'application/json');
-  });
-
-  $group->get('/devolverDatos', function (Request $request, Response $response) {
-    $header = $request->getHeaderLine('Authorization');
-    $token = trim(explode("Bearer", $header)[1]);
-
-    try {
-      $payload = json_encode(array('datos' => AutentificadorJWT::ObtenerData($token)));
-    } catch (Exception $e) {
-      $payload = json_encode(array('error' => $e->getMessage()));
-    }
-
-    $response->getBody()->write($payload);
-    return $response
-      ->withHeader('Content-Type', 'application/json');
-  });
-
-  $group->get('/verificarToken', function (Request $request, Response $response) {
-    $header = $request->getHeaderLine('Authorization');
-    $token = trim(explode("Bearer", $header)[1]);
-    $esValido = false;
-
-    try {
-      AutentificadorJWT::verificarToken($token);
-      $esValido = true;
-    } catch (Exception $e) {
-      $payload = json_encode(array('error' => $e->getMessage()));
-    }
-
-    if ($esValido) {
-      $payload = json_encode(array('valid' => $esValido));
-    }
-
-    $response->getBody()->write($payload);
-    return $response
-      ->withHeader('Content-Type', 'application/json');
-  });
+  $group->get('/download[/]', \ArchivoController::class . '::Descargar');
 });
 
 

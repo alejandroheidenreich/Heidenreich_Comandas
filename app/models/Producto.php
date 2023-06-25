@@ -1,5 +1,8 @@
 <?php
 
+require_once './interfaces/IPersistencia.php';
+require_once './models/ROL.php';
+
 class Producto implements IPersistencia
 {
     public $id;
@@ -7,14 +10,6 @@ class Producto implements IPersistencia
     public $tipo;
     public $precio;
 
-    public function __construct( /*$descripcion, $tipo, $precio, $id = false*/)
-    { /*
-  $this->descripcion = $descripcion;
-  $this->tipo = $tipo;
-  $this->precio = $precio;
-  if ($id)
-      $this->id = $id;*/
-    }
 
     public function __get($propiedad)
     {
@@ -47,6 +42,14 @@ class Producto implements IPersistencia
         return $objAccesoDatos->obtenerUltimoId();
     }
 
+
+    public static function crearLista($lista)
+    {
+        foreach ($lista as $p) {
+            Producto::crear($p);
+        }
+    }
+
     public static function obtenerTodos()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
@@ -73,7 +76,7 @@ class Producto implements IPersistencia
         $consulta = $objAccesoDato->prepararConsulta("UPDATE productos SET descripcion = :descripcion, tipo = :tipo, precio = :precio WHERE id = :id AND fechaBaja IS NULL");
         $consulta->bindValue(':descripcion', $producto->descripcion, PDO::PARAM_STR);
         $consulta->bindValue(':tipo', $producto->tipo, PDO::PARAM_STR);
-        $consulta->bindValue(':precio', $producto->precio, PDO::PARAM_INT);
+        $consulta->bindValue(':precio', $producto->precio, PDO::PARAM_STR);
         $consulta->bindValue(':id', $producto->id, PDO::PARAM_INT);
         $consulta->execute();
     }
@@ -88,8 +91,22 @@ class Producto implements IPersistencia
         $consulta->execute();
     }
 
-    public static function leerCSV($ruta){
+    public static function ValidarDescripcion($descripcion)
+    {
+        $productos = Producto::obtenerTodos();
+        foreach ($productos as $p) {
+            if ($p->descripcion == $descripcion) {
+                return $p;
+            }
+        }
+        return null;
+    }
 
-        
+    public static function ValidarTipo($tipo)
+    {
+        if ($tipo != Rol::BARTENDER && $tipo != Rol::CERVECERO && $tipo != Rol::COCINERO && $tipo != Rol::MOZO && $tipo != Rol::CANDYBAR) {
+            return false;
+        }
+        return true;
     }
 }

@@ -9,21 +9,7 @@ class Usuario implements IPersistencia
     public $usuario;
     public $clave;
     public $rol;
-
-    public $token;
-
-    public $expiracionToken;
-
     public $fechaBaja;
-
-    public function __construct( /*$usuario, $clave, $rol, $id = false*/)
-    {
-        // $this->usuario = $usuario;
-        // $this->clave = $clave;
-        // $this->rol = $rol;
-        // $this->id = $id;
-
-    }
 
     public function __get($propiedad)
     {
@@ -43,7 +29,6 @@ class Usuario implements IPersistencia
         }
     }
 
-
     public static function crear($user)
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
@@ -55,6 +40,13 @@ class Usuario implements IPersistencia
         $consulta->execute();
 
         return $objAccesoDatos->obtenerUltimoId();
+    }
+
+    public static function crearLista($lista)
+    {
+        foreach ($lista as $u) {
+            Usuario::crear($u);
+        }
     }
 
     public static function obtenerTodos()
