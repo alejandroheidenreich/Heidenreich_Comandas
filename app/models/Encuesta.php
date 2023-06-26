@@ -63,7 +63,7 @@ class Encuesta implements IPersistencia
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
         $consulta = $objAccesoDatos->prepararConsulta("SELECT id, codigoMesa, codigoPedido, puntuacionMesa, puntuacionRestaurante, puntuacionMozo, puntuacionCocinero, experiencia, (puntuacionMesa + puntuacionRestaurante + puntuacionMozo + puntuacionCocinero)/4 AS promedio
-        FROM encuestas ORDER BY promedio");
+        FROM encuestas ORDER BY promedio DESC");
         $consulta->execute();
 
         return $consulta->fetchAll(PDO::FETCH_ASSOC);
