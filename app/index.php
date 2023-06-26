@@ -95,6 +95,7 @@ $app->group('/pedidos', function (RouteCollectorProxy $group) {
 
 $app->group('/encuesta', function (RouteCollectorProxy $group) {
   $group->post('[/]', \EncuestaController::class . '::CargarUno');
+  $group->get('/mejores', \EncuestaController::class . '::TraerMejores')->add(\Autentificador::class . '::ValidarSocio');
 });
 
 // LOG IN 

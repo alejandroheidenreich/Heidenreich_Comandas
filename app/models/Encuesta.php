@@ -62,10 +62,11 @@ class Encuesta implements IPersistencia
     public static function obtenerMejoresComentarios()
     {
         $objAccesoDatos = AccesoDatos::obtenerInstancia();
-        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, codigoMesa, codigoPedido, puntuacionMesa, puntuacionRestaurante, puntuacionMozo, puntuacionCocinero, experiencia FROM productos");
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, codigoMesa, codigoPedido, puntuacionMesa, puntuacionRestaurante, puntuacionMozo, puntuacionCocinero, experiencia, (puntuacionMesa + puntuacionRestaurante + puntuacionMozo + puntuacionCocinero)/4 AS promedio
+        FROM encuestas ORDER BY promedio");
         $consulta->execute();
 
-        return $consulta->fetchAll(PDO::FETCH_CLASS, 'Encuesta');
+        return $consulta->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public static function obtenerUno($valor)

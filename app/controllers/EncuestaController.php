@@ -63,6 +63,15 @@ class EncuestaController extends Encuesta implements IApiUse
     return $response
       ->withHeader('Content-Type', 'application/json');
   }
+  public static function TraerMejores($request, $response, $args)
+  {
+    $lista = Encuesta::obtenerMejoresComentarios();
+    $payload = json_encode(array("Mejores comentarios" => $lista));
+
+    $response->getBody()->write($payload);
+    return $response
+      ->withHeader('Content-Type', 'application/json');
+  }
 
   public static function ModificarUno($request, $response, $args)
   {
