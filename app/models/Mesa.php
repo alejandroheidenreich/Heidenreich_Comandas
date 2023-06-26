@@ -60,6 +60,15 @@ class Mesa implements IPersistencia
 
         return $consulta->fetchObject('Mesa');
     }
+    public static function obtenerUnoPorCodigo($valor)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta("SELECT id, codigoMesa, estado FROM mesas WHERE codigoMesa = :valor");
+        $consulta->bindValue(':valor', $valor, PDO::PARAM_STR);
+        $consulta->execute();
+
+        return $consulta->fetchObject('Mesa');
+    }
 
     public static function modificar($mesa)
     {

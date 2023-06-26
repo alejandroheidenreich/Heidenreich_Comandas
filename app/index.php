@@ -23,6 +23,7 @@ require_once './controllers/UsuarioController.php';
 require_once './controllers/ProductoController.php';
 require_once './controllers/MesaController.php';
 require_once './controllers/PedidoController.php';
+require_once './controllers/EncuestaController.php';
 
 date_default_timezone_set('America/Argentina/Buenos_Aires');
 
@@ -92,6 +93,9 @@ $app->group('/pedidos', function (RouteCollectorProxy $group) {
   $group->post('[/]', \PedidoController::class . '::CargarUno')->add(\Autentificador::class . '::ValidarMozo');
 });
 
+$app->group('/encuesta', function (RouteCollectorProxy $group) {
+  $group->post('[/]', \EncuestaController::class . '::CargarUno');
+});
 
 // LOG IN 
 $app->group('/login', function (RouteCollectorProxy $group) {

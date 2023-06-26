@@ -91,13 +91,19 @@ class PedidoController extends Pedido implements IApiUse
 
     $token = $cookies['token'];
     $data = AutentificadorJWT::ObtenerData($token);
-    foreach ($listaPendientes as $pedido) {
 
-      if ((Producto::obtenerUno($pedido->idProducto))->tipo == $data->rol) {
-        $lista[] = $pedido;
+    if ($data->rol == Rol::SOCIO) {
+      $lista = $listaPendientes;
+    } else {
+
+      foreach ($listaPendientes as $pedido) {
+
+        if ((Producto::obtenerUno($pedido->idProducto))->tipo == $data->rol) {
+          $lista[] = $pedido;
+        }
       }
     }
-    $payload = json_encode(array("listaPedidosListos" => $lista));
+    $payload = json_encode(array("listaPedidosPendientes" => $lista));
 
     $response->getBody()->write($payload);
     return $response
