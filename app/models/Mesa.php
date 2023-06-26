@@ -80,4 +80,51 @@ class Mesa implements IPersistencia
         $consulta->bindValue(':estado', Estado::BAJA, PDO::PARAM_STR);
         $consulta->execute();
     }
+
+    public static function obtenerCuenta($codigoPedido)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta(
+            "SELECT p.idMesa , SUM(pr.precio)
+            FROM pedidos as p
+            INNER JOIN productos as pr ON p.idProducto = pr.id
+            WHERE p.codigoPedido = :codigoPedido"
+        );
+        $consulta->bindValue(':codigoPedido', $codigoPedido, PDO::PARAM_STR);
+
+        $consulta->execute();
+
+        return $consulta->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function obtenerMesaPorCodigoPedido($codigoPedido)
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta(
+            "SELECT m.id, m.codigoMesa, m.estado
+            FROM mesas as m
+            INNER JOIN pedidos as p ON p.idMesa = m.id
+            WHERE p.codigoPedido = :codigoPedido"
+        );
+        $consulta->bindValue(':codigoPedido', $codigoPedido, PDO::PARAM_STR);
+
+        $consulta->execute();
+
+        return $consulta->fetchObject('Mesa');
+
+    }
+    public static function obtenerUsosMesas()
+    {
+        $objAccesoDatos = AccesoDatos::obtenerInstancia();
+        $consulta = $objAccesoDatos->prepararConsulta(
+            "SELECT m.id, COUNT(*) as cantidad
+            FROM pedidos as p
+            INNER JOIN mesas as m ON p.idMesa = m.id"
+        );
+
+
+        $consulta->execute();
+
+        return $consulta->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

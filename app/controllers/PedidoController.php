@@ -11,8 +11,8 @@ class PedidoController extends Pedido implements IApiUse
   public static function CargarUno($request, $response, $args)
   {
     $parametros = $request->getParsedBody();
+    $uploadedFiles = $request->getUploadedFiles();
 
-    //$idMesa, $idProducto, $nombreCliente
     $idMesa = $parametros['idMesa'];
     $idProducto = $parametros['idProducto'];
     $nombreCliente = $parametros['nombreCliente'];
@@ -23,6 +23,11 @@ class PedidoController extends Pedido implements IApiUse
 
     $pedido->idProducto = $idProducto;
     $pedido->nombreCliente = $nombreCliente;
+    if (isset($uploadedFiles['fotoMesa'])) {
+      $targetPath = './img/' . date_format(new DateTime(), 'Y-m-d_H-i-s') . '_' . $nombreCliente . '_Mesa_' . $idMesa . '.jpg';
+      $uploadedFiles['fotoMesa']->moveTo($targetPath);
+      $pedido->fotoMesa = $targetPath;
+    }
 
     $mesa = Mesa::obtenerUno($idMesa);
 
@@ -45,7 +50,7 @@ class PedidoController extends Pedido implements IApiUse
 
   public static function TraerUno($request, $response, $args)
   {
-    $valor = $args['valor'];
+    $valor = $args['id'];
     $pedido = Pedido::obtenerUno($valor);
     $payload = json_encode($pedido);
 
@@ -58,6 +63,18 @@ class PedidoController extends Pedido implements IApiUse
   public static function TraerTodos($request, $response, $args)
   {
     $lista = Pedido::obtenerTodos();
+    $payload = json_encode(array("listaPedidos" => $lista));
+
+    $response->getBody()->write($payload);
+    return $response
+      ->withHeader('Content-Type', 'application/json');
+  }
+  public static function TraerPedidosMesa($request, $response, $args)
+  {
+    $codigoMesa = $args['codigoMesa'];
+    $codigoPedido = $args['codigoPedido'];
+
+    $lista = Pedido::obtenerPedidosPorMesa($codigoMesa, $codigoPedido);
     $payload = json_encode(array("listaPedidos" => $lista));
 
     $response->getBody()->write($payload);
@@ -80,7 +97,19 @@ class PedidoController extends Pedido implements IApiUse
         $lista[] = $pedido;
       }
     }
-    $payload = json_encode(array("listaPedidosPendientes" => $lista));
+    $payload = json_encode(array("listaPedidosListos" => $lista));
+
+    $response->getBody()->write($payload);
+    return $response
+      ->withHeader('Content-Type', 'application/json');
+  }
+
+  public static function TraerListos($request, $response, $args)
+  {
+    $listaListos = Pedido::obtenerListos();
+
+
+    $payload = json_encode(array("listaPedidosListos" => $listaListos));
 
     $response->getBody()->write($payload);
     return $response
@@ -180,6 +209,9 @@ class PedidoController extends Pedido implements IApiUse
 
       if ($pedido->estado == Estado::LISTO) {
         Pedido::entregar($id);
+        $mesa = Mesa::obtenerUno($pedido->idMesa);
+        $mesa->estado = Estado::COMIENDO;
+        Mesa::modificar($mesa);
         $payload = json_encode(array("mensaje" => "Pedido entregado"));
       } else {
         $payload = json_encode(array("mensaje" => "El pedido no esta listo"));

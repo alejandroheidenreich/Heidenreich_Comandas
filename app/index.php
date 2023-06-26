@@ -71,7 +71,10 @@ $app->group('/productos', function (RouteCollectorProxy $group) {
 
 $app->group('/mesas', function (RouteCollectorProxy $group) {
   $group->get('[/]', \MesaController::class . '::TraerTodos')->add(\Autentificador::class . '::ValidarSocio');
-  $group->get('/consulta', \MesaController::class . '::TraerUno')->add(\Autentificador::class . '::ValidarSocio');
+  $group->get('/cuenta/{codigoPedido}', \MesaController::class . '::CuentaMesa')->add(\Autentificador::class . '::ValidarMozo');
+  $group->get('/cobrar/{codigoPedido}', \MesaController::class . '::CobrarMesa')->add(\Autentificador::class . '::ValidarMozo');
+  $group->get('/cerrar/{id}', \MesaController::class . '::CerrarMesa')->add(\Autentificador::class . '::ValidarSocio');
+  $group->get('/usos', \MesaController::class . '::UsosMesa')->add(\Autentificador::class . '::ValidarSocio');
   $group->post('[/]', \MesaController::class . '::CargarUno')->add(\Autentificador::class . '::ValidarSocio');
   $group->put('/{id}', \MesaController::class . '::ModificarUno')->add(\Autentificador::class . '::ValidarSocio');
   $group->delete('/{id}', \MesaController::class . '::BorrarUno')->add(\Autentificador::class . '::ValidarSocio');
@@ -79,11 +82,13 @@ $app->group('/mesas', function (RouteCollectorProxy $group) {
 
 $app->group('/pedidos', function (RouteCollectorProxy $group) {
   $group->get('[/]', \PedidoController::class . '::TraerTodos')->add(\Autentificador::class . '::ValidarMozo');
+  $group->get('/buscar/{id}', \PedidoController::class . '::TraerUno')->add(\Autentificador::class . '::ValidarMozo');
+  $group->get('/listos', \PedidoController::class . '::TraerListos')->add(\Autentificador::class . '::ValidarMozo');
   $group->get('/pendientes', \PedidoController::class . '::TraerPendientes')->add(\Autentificador::class . '::ValidarPreparador');
   $group->post('/inicio/{id}', \PedidoController::class . '::IniciarPedido')->add(\Autentificador::class . '::ValidarPreparador');
   $group->post('/final/{id}', \PedidoController::class . '::FinalizarPedido')->add(\Autentificador::class . '::ValidarPreparador');
   $group->post('/entregar/{id}', \PedidoController::class . '::EntregarPedido')->add(\Autentificador::class . '::ValidarMozo');
-  $group->get('/consulta', \PedidoController::class . '::TraerUno')->add(\Autentificador::class . '::ValidarMozo');
+  $group->get('/{codigoMesa}-{codigoPedido}', \PedidoController::class . '::TraerPedidosMesa');
   $group->post('[/]', \PedidoController::class . '::CargarUno')->add(\Autentificador::class . '::ValidarMozo');
 });
 
